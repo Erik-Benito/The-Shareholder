@@ -21,7 +21,6 @@ typedef struct {
 
 typedef struct {
 	ALLEGRO_DISPLAY* window;
-	ALLEGRO_BITMAP* background;
 } Container;
 
 typedef struct {

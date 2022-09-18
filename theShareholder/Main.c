@@ -15,23 +15,13 @@ Background background;
 // Prototypes
 void LogError(char* error);
 
-void initContainer(Container container);
+void initContainer(Container* container);
 
-void InitBackground(Background background, float x, float y, int width, int height, ALLEGRO_BITMAP* image);
-void DrawBackground(Background background);
+void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP *image);
+void DrawBackground(Background* background);
 
 int main(void) {
-
-	//Allegro varivaies
-	ALLEGRO_DISPLAY* window = NULL;
-	ALLEGRO_BITMAP* bgImage = NULL;
-
-	initContainer(container);
-
-	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("FUNDOteste1.png"));
-	DrawBackground(background);
-
-
+	initContainer(&container, &background);
 	return 0;
 };
 
@@ -39,40 +29,53 @@ int main(void) {
 
 void LogError(char* error)
 {
-	al_show_native_message_box(NULL, "Aviso!", "ERROR:", error, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+	al_show_native_message_box(NULL, "Aviso!", "ERROR:", *error, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 	return;
 };
 
 
-void initContainer(Container container) 
+void initContainer(Container* container, Background* background)
 {
 	//Inicia o alegro
 	if (!al_init())
 		LogError("Falha ao carregar o allegro");
 
 	//Criacao do Display
-	if (!(container.window = al_create_display(WINDOW_HEIGHT, WINDOW_WIDTH)))
+	if (!(container->window = al_create_display(WINDOW_HEIGHT, WINDOW_WIDTH)))
 		LogError("Falha ao carregar janela");
 
+	// Carrega add-on
 	al_init_primitives_addon();
 	al_init_image_addon();
 
+	// Carrega Background
+	InitBackground(&background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("teste1.bmp"));
+	DrawBackground(&background);
+
 	// Criamos um back buffer
 	al_flip_display();
+
+	al_rest(5.0);
 };
 
 
-void InitBackground(Background background, float x, float y, int width, int height, ALLEGRO_BITMAP* image)
+void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP *image)
 {
-	background.x = x;
-	background.y = y;
-	background.width = width;
-	background.height = height;
-	background.image = image;
-}
-void DrawBackground(Background background)
-{
+	background->image = NULL;
 
-	if (background.x + background.width < WINDOW_HEIGHT)
-		al_draw_bitmap(background.image, background.x + background.width, background.y, 0);
+	background->x = x;
+	background->y = y;
+	background->width = width;
+	background->height = height;
+	background->image = image;
+
+	if (!background->image)
+		LogError("Falha ao carregar a imagem");
+}
+void DrawBackground(Background* background)
+{
+	al_draw_bitmap(background->image, background->x, background->y, 0);
+
+	if (background->x + background->width < WINDOW_HEIGHT)
+		al_draw_bitmap(background->image, background->x + background->width, background->y, 0);
 }
