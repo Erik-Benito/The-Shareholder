@@ -24,7 +24,7 @@ typedef struct {
 
 
 typedef struct {
-	bool hasStarted;
+	bool hasFinished;
 	ALLEGRO_DISPLAY* window;
 	ALLEGRO_EVENT_QUEUE* eventQueue;
 } Container;
