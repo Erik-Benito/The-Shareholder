@@ -12,6 +12,7 @@
 
 Container container;
 Background background;
+const float fps = 60;
 
 // Prototypes
 void LogError(char* error);
@@ -112,21 +113,28 @@ int pos_y = 100;
 
 void ControlEvent(Container* container, Background* background)
 {
-	int fps = 0;
 	ALLEGRO_FONT* font = al_load_font("BAVEUSE.TTF", 20, NULL);
+	ALLEGRO_TIMER* timer = al_create_timer(1.0 / fps);
+	bool needRedraw = true;
+
+	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
+	al_start_timer(timer);
+	int count = 0;
 
 	while (!container->hasFinished)
 	{
 		al_flip_display();
 
 		DrawBackground(background);
-		al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 5, ALLEGRO_ALIGN_CENTRE, "FPS: %d", fps++);
+		al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 5, ALLEGRO_ALIGN_CENTRE, "FPS: %d", count);
+		al_draw_filled_rectangle(pos_x, pos_y, pos_x + 30, pos_y + 30, al_map_rgb(255, 255, 0));
 
 		ALLEGRO_EVENT event;
 
+
 		al_wait_for_event(container->eventQueue, &event);
 
-		if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		if (event.type == ALLEGRO_EVENT_KEY_UP)
 		{
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				container->hasFinished = true;
@@ -148,11 +156,18 @@ void ControlEvent(Container* container, Background* background)
 			}
 		}
 
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			needRedraw = true;
+		}
+
+		if (needRedraw && count < fps) {
+			al_flip_display();
+			count++;
+			needRedraw = false;
+		}
+
 		else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
 			container->hasFinished = true;
-
-		al_draw_filled_rectangle( pos_x, pos_y, pos_x + 30, pos_y + 30, al_map_rgb(255, 255, 0));
-
 
 	}
 
