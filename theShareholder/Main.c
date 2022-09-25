@@ -10,27 +10,30 @@
 
 #include "game.h"
 
+Player player;
 Container container;
 Background background;
-const float fps = 60;
 
 // Prototypes
 void LogError(char* error);
+void LogFrames(int fps);
 
-void initContainer(Container* container, Background* background);
+void InitContainer(Container* container, Background* background, Player* player);
 void EndContainer(Container* container);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image);
 void DrawBackground(Background* background);
 
-void InitEvent(Container* container, Background* background);
-void ControlEvent(Container* container, Background* background);
+void InitPlayer(Player* player);
+void PositionPlayer(Player* player, int x, int y);
+
+void InitEvent(Container* container, Background* background, Player* player);
+void ControlEvent(Container* container, Background* background, Player* player);
 
 int main(void) {
-	initContainer(&container, &background);
+	InitContainer(&container, &background, &player);
 	return 0;
 };
-
 
 
 void LogError(char* error)
@@ -38,9 +41,24 @@ void LogError(char* error)
 	al_show_native_message_box(NULL, "Aviso!", "ERROR:", *error, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 	return;
 };
+void LogFrames(int fps, ALLEGRO_FONT* font)
+{
+	al_draw_textf(font, al_map_rgb(255, 255, 255), 50, 10, ALLEGRO_ALIGN_CENTRE, "FPS: %d", fps);
+}
 
 
-void initContainer(Container* container, Background* background)
+void InitPlayer(Player* player) {
+	player->x = 100;
+	player->y = 100;
+};
+void PositionPlayer(Player* player) {
+
+	al_draw_filled_rectangle(player->x, player->y, player->x + 30, player->y + 30, al_map_rgb(255, 255, 0));
+	return;
+}
+
+
+void InitContainer(Container* container, Background* background, Player* player)
 {
 	//Inicia o alegro
 	if (!al_init())
@@ -51,17 +69,22 @@ void initContainer(Container* container, Background* background)
 		LogError("Falha ao carregar janela");
 
 
+	// Add-on Allegro
 	al_init_ttf_addon();
 	al_init_font_addon();
 	al_init_image_addon();
+	al_install_keyboard();
 	al_init_primitives_addon();
 
 	// Carrega Background
 	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("teste1.bmp"));
 	DrawBackground(background);
 
+	// Criando Personagem
+	InitPlayer(player);
+
 	// Carregando Eventos do game 
-	InitEvent(container, background);
+	InitEvent(container, background, player);
 
 };
 void EndContainer(Container* container) {
@@ -90,48 +113,38 @@ void DrawBackground(Background* background)
 		al_draw_bitmap(background->image, background->x + background->width, background->y, 0);
 }
 
-void InitEvent(Container* container, Background* background)
+
+void InitEvent(Container* container, Background* background, Player* player)
 {
-	al_install_keyboard();
-
 	container->hasFinished = false;
-	container->eventQueue = NULL;
+	container->needRedraw = true;
 
+	container->eventQueue = NULL;
 	container->eventQueue = al_create_event_queue();
+	
 	if (!container->eventQueue)
 		LogError("Nã0 foi possivel carregar o evento");
 
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
-	ControlEvent(container, background);
+	ControlEvent(container, background, player);
 }
 
 
-int pos_x = 100;
-int pos_y = 100;
-
-
-
-void ControlEvent(Container* container, Background* background)
+void ControlEvent(Container* container, Background* background, Player* player)
 {
+	int frame = 0;
+	double startTime = al_get_time();
 	ALLEGRO_FONT* font = al_load_font("BAVEUSE.TTF", 20, NULL);
-	ALLEGRO_TIMER* timer = al_create_timer(1.0 / fps);
-	bool needRedraw = true;
-
-	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
-	al_start_timer(timer);
-	int count = 0;
 
 	while (!container->hasFinished)
 	{
+		DrawBackground(background);
+		PositionPlayer(player);
+		LogFrames(frame, font);
+		
 		al_flip_display();
 
-		DrawBackground(background);
-		al_draw_textf(font, al_map_rgb(255, 255, 255), 10, 5, ALLEGRO_ALIGN_CENTRE, "FPS: %d", count);
-		al_draw_filled_rectangle(pos_x, pos_y, pos_x + 30, pos_y + 30, al_map_rgb(255, 255, 0));
-
 		ALLEGRO_EVENT event;
-
-
 		al_wait_for_event(container->eventQueue, &event);
 
 		if (event.type == ALLEGRO_EVENT_KEY_UP)
@@ -142,33 +155,25 @@ void ControlEvent(Container* container, Background* background)
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_UP:
-				pos_y -= 10;
+				player->y -= 30;
 				break;
 			case ALLEGRO_KEY_DOWN:
-				pos_y += 10;
+				player->y += 30;
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				pos_x += 10;
+				player->x += 30;
 				break;
 			case ALLEGRO_KEY_LEFT:
-				pos_x -= 10;
+				player->x -= 30;
 				break;
 			}
 		}
 
-		if (event.type == ALLEGRO_EVENT_TIMER) {
-			needRedraw = true;
-		}
-
-		if (needRedraw && count < fps) {
-			al_flip_display();
-			count++;
-			needRedraw = false;
-		}
-
-		else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-			container->hasFinished = true;
-
+		frame++;
+		if ((al_get_time() - startTime) < 1.0 / FPS)
+			al_rest((1.0 / FPS) - (al_get_time() - startTime));
+		else if (frame > 60)
+			frame--;
 	}
 
 	EndContainer(container);
