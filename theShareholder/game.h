@@ -1,9 +1,11 @@
 #pragma once
 #ifndef __GLOBAL__GAME__
-
 #define __GLOBAL__GAME__
-#define WINDOW_HEIGHT 680
-#define WINDOW_WIDTH 640
+
+#define WINDOW_HEIGHT 832
+#define WINDOW_WIDTH 704
+#define FPS 60
+
 
 #include <stdlib.h>
 #include <allegro5/allegro.h>
@@ -14,15 +16,21 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_primitives.h>
 
+
+
 typedef struct {
 	int x;
 	int y;
 } Player;
 
+
 typedef struct {
+	bool hasFinished;
+	bool needRedraw;
 	ALLEGRO_DISPLAY* window;
-	ALLEGRO_BITMAP* background;
+	ALLEGRO_EVENT_QUEUE* eventQueue;
 } Container;
+
 
 typedef struct {
 	float x;
@@ -33,7 +41,5 @@ typedef struct {
 
 	ALLEGRO_BITMAP* image;
 } Background;
-
-
 
 #endif
