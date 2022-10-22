@@ -2,8 +2,8 @@
 #ifndef __GLOBAL__GAME__
 #define __GLOBAL__GAME__
 
-#define WINDOW_HEIGHT 832
-#define WINDOW_WIDTH 704
+#define WINDOW_WIDTH 1000
+#define WINDOW_HEIGHT 650
 #define FPS 60
 
 
@@ -31,6 +31,15 @@ typedef struct {
 	ALLEGRO_EVENT_QUEUE* eventQueue;
 } Container;
 
+typedef struct {
+	int x;
+	int y;
+	int speed;
+
+	bool active;
+
+	ALLEGRO_BITMAP* image;
+} Cloud;
 
 typedef struct {
 	float x;
@@ -38,6 +47,8 @@ typedef struct {
 
 	int width;
 	int height;
+
+	Cloud cloud[2];
 
 	ALLEGRO_BITMAP* image;
 } Background;
