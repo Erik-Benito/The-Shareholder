@@ -21,6 +21,7 @@
 typedef struct {
 	int x;
 	int y;
+	int mvSpeed;
 } Player;
 
 

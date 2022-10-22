@@ -10,11 +10,11 @@
 
 #include "game.h"
 #include "mouse.h"
+#include "spritesheet.h"
 
 Player player;
 Container container;
 Background background;
-//struct do mouse
 Mouse mouse;
 
 
@@ -29,12 +29,17 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 void DrawBackground(Background* background);
 
 void InitPlayer(Player* player);
-void PositionPlayer(Player* player, int x, int y);
+void PositionPlayer(Player* player, ALLEGRO_BITMAP* spritePlayer, int curFrame);
 
 void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse);
 void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse);
-//Desenha o quadrado do mouse
+
 void PositionMouse(Mouse* mouse, int x, int y);
+
+void PlayerMoveUp(Player* player);
+void PlayerMoveDown(Player* player);
+void PlayerMoveRIGHT(Player* player);
+void PlayerMoveLEFT(Player* player);
 
 int main(void) {
 	InitContainer(&container, &background, &player, &mouse);
@@ -57,14 +62,28 @@ void InitPlayer(Player* player) {
 	player->x = 100;
 	player->y = 100;
 };
-void PositionPlayer(Player* player) {
-
-	al_draw_filled_rectangle(player->x, player->y, player->x + 30, player->y + 30, al_map_rgb(255, 255, 0));
+void PositionPlayer(Player* player, ALLEGRO_BITMAP* spritePlayer, int curFrame) {
+	al_draw_bitmap_region(spritePlayer, 0 , 0, 30, 32, player->x, player->y, NULL);
 	return;
 }
-//Desenho Mouse
+
+void PlayerMoveUp(Player* player) {
+	player->y -= player->mvSpeed;
+}
+void PlayerMoveDown(Player* player) {
+	player->y += player->mvSpeed;
+}
+void PlayerMoveRight(Player* player) {
+	player->x += player->mvSpeed;
+}
+void PlayerMoveLeft(Player* player) {
+	player->x -= player->mvSpeed;
+}
+
+
 void PositionMouse(Mouse* mouse) {
-	al_draw_filled_rectangle(mouse->x, mouse->y, mouse->x + 10, mouse->y + 10, al_map_rgb(255, 255, 0));
+
+	al_draw_filled_rectangle(mouse->x, mouse->y, mouse->x + 10, mouse->y + 10, al_map_rgb(44, 117, 255));
 	return;
 }
 
@@ -101,7 +120,10 @@ void InitContainer(Container* container, Background* background, Player* player,
 	InitEvent(container, background, player, mouse);
 
 };
-void EndContainer(Container* container) {
+void EndContainer(Container* container, ALLEGRO_BITMAP* spritePlayer) {
+	
+	al_destroy_display(container->window);
+	al_destroy_bitmap(spritePlayer);
 	al_destroy_event_queue(container->eventQueue);
 }
 
@@ -130,6 +152,9 @@ void DrawBackground(Background* background)
 
 void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse)
 {
+	ALLEGRO_TIMER* timer = NULL;
+	timer = al_create_timer(1.0 / FPS);
+
 	container->hasFinished = false;
 	container->needRedraw = true;
 
@@ -141,6 +166,8 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
+	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
+	al_start_timer(timer);
 	ControlEvent(container, background, player, mouse);
 }
 
@@ -151,20 +178,37 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	double startTime = al_get_time();
 	ALLEGRO_FONT* font = al_load_font("BAVEUSE.TTF", 20, NULL);
 	al_hide_mouse_cursor(container->window);
+	ALLEGRO_BITMAP* spritePlayer = al_load_bitmap("Walk2(teste2001).png");
+	int dir = DOWN, SourceX = 0, sourceY = 0;
+	player->mvSpeed = 10;
+	int curFrame = 0;
+	bool redraw = true, active = false;
 
 	while (!container->hasFinished)
 	{
 		DrawBackground(background);
-		PositionPlayer(player);
+		
 		PositionMouse(mouse);
 		LogFrames(frame, font);
-		
 		al_flip_display();
-
+		PositionPlayer(player, spritePlayer, curFrame);
 		ALLEGRO_EVENT event;
 		al_wait_for_event(container->eventQueue, &event);
+		ALLEGRO_KEYBOARD_STATE keyState;
 
-		if (event.type == ALLEGRO_EVENT_KEY_UP)
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			redraw = true;
+			active = true;
+			if (keys[UP])
+				PlayerMoveUp(player);
+			if (keys[DOWN])
+				PlayerMoveDown(player);
+			if (keys[LEFT])
+				PlayerMoveLeft(player);
+			if (keys[RIGHT])
+				PlayerMoveRight(player);
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
 		{
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				container->hasFinished = true;
@@ -172,30 +216,73 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_UP:
-				player->y -= 30;
+				keys[UP] = true;
 				break;
 			case ALLEGRO_KEY_DOWN:
-				player->y += 30;
+				keys[DOWN] = true;
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				player->x += 30;
+				keys[RIGHT] = true;
 				break;
 			case ALLEGRO_KEY_LEFT:
-				player->x -= 30;
+				keys[LEFT] = true;
+				break;
+			}
+		} 
+		else if (event.type == ALLEGRO_EVENT_KEY_UP)
+		{
+			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				container->hasFinished = true;
+
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_UP:
+				keys[UP] = false;
+				break;
+			case ALLEGRO_KEY_DOWN:
+				keys[DOWN] = false;
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				keys[RIGHT] = false;
+				break;
+			case ALLEGRO_KEY_LEFT:
+				keys[LEFT] = false;
 				break;
 			}
 		}
-		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES) {
+		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES) 
+		{
 			mouse->x = event.mouse.x;
 			mouse->y = event.mouse.y;
 		}
+		else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
+		{
+			if (event.mouse.button & 1) { //botão esquerdo
+				
+			}
+			if (event.mouse.button & 2) { // botão direito
+				
+			}
+		} else 
+			//active = false;
 
-		frame++;
-		if ((al_get_time() - startTime) < 1.0 / FPS)
-			al_rest((1.0 / FPS) - (al_get_time() - startTime));
-		else if (frame > 60)
-			frame--;
+		//if (active) {
+
+		//}
+
+		if (redraw && al_is_event_queue_empty(container->eventQueue)) 
+		{
+			redraw = false;
+			
+			PositionPlayer(player, spritePlayer, curFrame);
+			DrawBackground(background);
+		}
+			
+		if (++frame >= 60) 
+		{
+			frame = 0;
+		}
 	}
 
-	EndContainer(container);
+	EndContainer(container, spritePlayer);
 }
