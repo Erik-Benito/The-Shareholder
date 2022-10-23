@@ -13,8 +13,7 @@
 #include <allegro5/allegro_primitives.h>
 
 
-enum Directions { DOWN, LEFT, RIGHT, UP};
+enum Directions { DOWN, UP, LEFT, RIGHT};
 bool keys[4] = { false, false, false, false };
-
 
 #endif

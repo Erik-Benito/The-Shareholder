@@ -2,9 +2,9 @@
 #ifndef __GLOBAL__GAME__
 #define __GLOBAL__GAME__
 
-#define WINDOW_HEIGHT 832
-#define WINDOW_WIDTH 704
-#define FPS 60
+#define WINDOW_HEIGHT 1000
+#define WINDOW_WIDTH 539
+#define FPS 60.0
 
 
 #include <stdlib.h>
@@ -22,6 +22,7 @@ typedef struct {
 	int x;
 	int y;
 	int mvSpeed;
+	ALLEGRO_BITMAP *spritePlayer;
 } Player;
 
 
