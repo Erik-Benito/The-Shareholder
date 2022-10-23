@@ -10,36 +10,44 @@
 
 #include "game.h"
 #include "mouse.h"
+#include "spritesheet.h"
 
 Player player;
 Container container;
 Background background;
-//struct do mouse
 Mouse mouse;
 
 
 // Prototypes
 void LogError(char* error);
-void LogFrames(int fps);
+void LogFrames(int fps, ALLEGRO_FONT* font);
 
 void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse);
-void EndContainer(Container* container);
+void EndContainer(Container* container, Player* player);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image);
 void DrawBackground(Background* background);
 
 void InitPlayer(Player* player);
-void PositionPlayer(Player* player, int x, int y);
+void PositionPlayer(Player* player);
 
 void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse);
 void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse);
-//Desenha o quadrado do mouse
-void PositionMouse(Mouse* mouse, int x, int y);
+
+void PositionMouse(Mouse* mouse);
+
+void PlayerMoveUp(Player* player);
+void PlayerMoveDown(Player* player);
+void PlayerMoveRight(Player* player);
+void PlayerMoveLeft(Player* player);
+
+
 
 int main(void) {
 	InitContainer(&container, &background, &player, &mouse);
 	return 0;
 };
+
 
 
 void LogError(char* error)
@@ -49,24 +57,42 @@ void LogError(char* error)
 };
 void LogFrames(int fps, ALLEGRO_FONT* font)
 {
-	al_draw_textf(font, al_map_rgb(255, 255, 255), 50, 10, ALLEGRO_ALIGN_CENTRE, "FPS: %d", fps);
+	al_draw_textf(font, al_map_rgb(0, 0, 0), 100, 100, ALLEGRO_ALIGN_CENTRE, "FPS: %d", fps);
 }
 
 
 void InitPlayer(Player* player) {
 	player->x = 100;
 	player->y = 100;
+	player->mvSpeed = 10;
+	player->spritePlayer = al_load_bitmap("PERSONAGEM.png");
 };
 void PositionPlayer(Player* player) {
+	al_draw_bitmap_region(player->spritePlayer, 0, 0, 30, 32, player->x, player->y, NULL);
+	return;
+}
 
-	al_draw_filled_rectangle(player->x, player->y, player->x + 30, player->y + 30, al_map_rgb(255, 255, 0));
-	return;
+
+void PlayerMoveUp(Player* player) {
+	player->y -= player->mvSpeed;
 }
-//Desenho Mouse
+void PlayerMoveDown(Player* player) {
+	player->y += player->mvSpeed;
+}
+void PlayerMoveRight(Player* player) {
+	player->x += player->mvSpeed;
+}
+void PlayerMoveLeft(Player* player) {
+	player->x -= player->mvSpeed;
+}
+
+
 void PositionMouse(Mouse* mouse) {
-	al_draw_filled_rectangle(mouse->x, mouse->y, mouse->x + 10, mouse->y + 10, al_map_rgb(255, 255, 0));
+
+	al_draw_filled_rectangle(mouse->x, mouse->y, mouse->x + 10, mouse->y + 10, al_map_rgb(44, 117, 255));
 	return;
 }
+
 
 void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse)
 {
@@ -86,12 +112,15 @@ void InitContainer(Container* container, Background* background, Player* player,
 	al_init_font_addon();
 	al_init_image_addon();
 	al_install_keyboard();
-	//instala as parada do mouse
-	al_install_mouse();
 	al_init_primitives_addon();
 
+	//instala as parada do mouse
+	al_install_mouse();
+	al_hide_mouse_cursor(container->window);
+
+
 	// Carrega Background
-	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("teste1.bmp"));
+	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("oficce.bmp"));
 	DrawBackground(background);
 
 	// Criando Personagem
@@ -101,7 +130,10 @@ void InitContainer(Container* container, Background* background, Player* player,
 	InitEvent(container, background, player, mouse);
 
 };
-void EndContainer(Container* container) {
+void EndContainer(Container* container, Player* player) {
+
+	al_destroy_display(container->window);
+	al_destroy_bitmap(player->spritePlayer);
 	al_destroy_event_queue(container->eventQueue);
 }
 
@@ -130,41 +162,60 @@ void DrawBackground(Background* background)
 
 void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse)
 {
+	ALLEGRO_TIMER* timer = NULL;
+	timer = al_create_timer(1.0 / FPS);
+
 	container->hasFinished = false;
 	container->needRedraw = true;
 
 	container->eventQueue = NULL;
 	container->eventQueue = al_create_event_queue();
-	
+
 	if (!container->eventQueue)
 		LogError("Nã0 foi possivel carregar o evento");
 
-	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
+	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
+
 	ControlEvent(container, background, player, mouse);
 }
 
 
 void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse)
 {
-	int frame = 0;
-	double startTime = al_get_time();
+
 	ALLEGRO_FONT* font = al_load_font("BAVEUSE.TTF", 20, NULL);
-	al_hide_mouse_cursor(container->window);
+	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
+
+	int dir = DOWN, frame = 0, sourceX = 0, sourceY = 0;
+
+	bool redraw = false, active = false, positionPlayer = player->x;
+
+	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
+
+	al_start_timer(timer);
 
 	while (!container->hasFinished)
 	{
-		DrawBackground(background);
-		PositionPlayer(player);
-		PositionMouse(mouse);
-		LogFrames(frame, font);
-		
-		al_flip_display();
-
 		ALLEGRO_EVENT event;
+		ALLEGRO_KEYBOARD_STATE keyState;
+
 		al_wait_for_event(container->eventQueue, &event);
 
-		if (event.type == ALLEGRO_EVENT_KEY_UP)
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			if (keys[UP])
+				PlayerMoveUp(player);
+			if (keys[DOWN])
+				PlayerMoveDown(player);
+			if (keys[LEFT])
+				PlayerMoveLeft(player);
+			if (keys[RIGHT])
+				PlayerMoveRight(player);
+
+			active = true;
+			redraw = true;
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
 		{
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				container->hasFinished = true;
@@ -172,30 +223,84 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_UP:
-				player->y -= 30;
+				keys[UP] = true;
+				dir = UP;
 				break;
 			case ALLEGRO_KEY_DOWN:
-				player->y += 30;
+				keys[DOWN] = true;
+				dir = DOWN;
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				player->x += 30;
+				keys[RIGHT] = true;
+				dir = RIGHT;
 				break;
 			case ALLEGRO_KEY_LEFT:
-				player->x -= 30;
+				dir = LEFT;
+				keys[LEFT] = true;
 				break;
 			}
 		}
-		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES) {
+		else if (event.type == ALLEGRO_EVENT_KEY_UP)
+		{
+			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				container->hasFinished = true;
+
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_UP:
+				keys[UP] = false;
+				break;
+			case ALLEGRO_KEY_DOWN:
+				keys[DOWN] = false;
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				keys[RIGHT] = false;
+				break;
+			case ALLEGRO_KEY_LEFT:
+				keys[LEFT] = false;
+				break;
+			}
+		}
+		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES)
+		{
 			mouse->x = event.mouse.x;
 			mouse->y = event.mouse.y;
 		}
+		else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
+		{
+			if (event.mouse.button & 1) { //botão esquerdo
 
-		frame++;
-		if ((al_get_time() - startTime) < 1.0 / FPS)
-			al_rest((1.0 / FPS) - (al_get_time() - startTime));
-		else if (frame > 60)
-			frame--;
+			}
+			if (event.mouse.button & 2) { // botão direito
+
+			}
+		}
+
+		if (active)
+			sourceX += al_get_bitmap_width(player->spritePlayer)/4;
+		else
+			sourceX = 100;
+		
+
+		if (sourceX >= al_get_bitmap_width(player->spritePlayer))
+			sourceX = 0;
+
+		if (redraw)
+		{
+			redraw = false;
+
+			LogFrames(frame, font);
+
+			al_draw_bitmap_region(player->spritePlayer, sourceX, dir * al_get_bitmap_height(player->spritePlayer) / 4, 100, 140, player->x, player->y, NULL);
+			PositionMouse(mouse);
+
+
+			al_flip_display();
+			DrawBackground(background);
+		}
+				
+
 	}
 
-	EndContainer(container);
+	EndContainer(container, player);
 }
