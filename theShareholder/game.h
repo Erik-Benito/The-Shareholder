@@ -4,7 +4,7 @@
 
 #define WINDOW_WIDTH 1000
 #define WINDOW_HEIGHT 650
-#define FPS 60
+#define FPS 30
 
 
 #include <stdlib.h>
@@ -19,17 +19,47 @@
 
 
 typedef struct {
+
 	int x;
 	int y;
+
+	int speed;
+	
+	int sourceX;
+	int sourceY;
+	bool needRedraw;
+
+	ALLEGRO_BITMAP *spritePlayer;
+
 } Player;
+
+typedef struct {
+
+	float hours;
+	float minutes;
+	float seconds;
+
+	int hoursTotal;
+	int minutesTotal;
+	int secondsTotal;
+
+	int days;
+
+} TimerGame;
+
 
 
 typedef struct {
+
 	bool hasFinished;
 	bool needRedraw;
+
 	ALLEGRO_DISPLAY* window;
 	ALLEGRO_EVENT_QUEUE* eventQueue;
+
 } Container;
+
+
 
 typedef struct {
 	int x;
@@ -41,16 +71,20 @@ typedef struct {
 	ALLEGRO_BITMAP* image;
 } Cloud;
 
+
+
 typedef struct {
+
 	float x;
 	float y;
 
 	int width;
 	int height;
 
-	Cloud cloud[2];
+	Cloud cloud[5];
 
 	ALLEGRO_BITMAP* image;
+
 } Background;
 
 #endif
