@@ -19,14 +19,22 @@ Container container;
 Background background;
 TimerGame timeGame;
 Mouse mouse;
+Wallet wallet;
 
 
 // Prototypes
 void LogError(char* error);
 void LogFrames(int fps, ALLEGRO_FONT* font);
+void LogWallet(ALLEGRO_FONT* font, Wallet* wallet);
+
+void InvestmentReturn(Wallet* wallet);
+void AddAmount(Wallet* wallet);
+void RemoveBalance(Wallet* wallet);
 
 void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame);
 void EndContainer(Container* container, Player* player);
+
+void InitWallet(Wallet* wallet);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image);
 void DrawBackground(Background* background, TimerGame* timerGame);
@@ -59,7 +67,7 @@ void PlayerMoveLeft(Player* player);
 
 
 int main(void) {
-	InitContainer(&container, &background, &player, &mouse, &timeGame);
+	InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet);
 	return 0;
 };
 
@@ -73,8 +81,32 @@ void LogFrames(int fps, ALLEGRO_FONT* font)
 {
 	al_draw_textf(font, al_map_rgb(0, 0, 0), 50, 10, ALLEGRO_ALIGN_CENTRE, "FPS: %d", fps);
 };
+void LogWallet(ALLEGRO_FONT* font, Wallet* wallet)
+{
+	float balance = wallet->amount + wallet->investedProfit + wallet->lossPerDay;
+	al_draw_textf(font, al_map_rgb(0, 0, 0), 70, 150, ALLEGRO_ALIGN_CENTER, "%0.2f", balance);
+	return;
+};
 
 
+void AddAmount(Wallet* wallet) {
+	wallet->amount+=50;
+}
+void InvestmentReturn(Wallet* wallet)
+{
+	wallet->investedProfit+= 300;
+}
+void RemoveBalance(Wallet* wallet)
+{
+	wallet->lossPerDay -= 100;
+}
+
+
+void InitWallet(Wallet *wallet) {
+	wallet->amount = 100;
+	wallet->investedProfit = 0;
+	wallet->lossPerDay = 0;
+}
 void InitTimerGame(TimerGame *timerGame)
 {
 	timerGame->hours = 3.7494;
@@ -136,7 +168,7 @@ void DrawMouse(Mouse* mouse) {
 };
 
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
 {
 	//Inicia o alegro
 	if (!al_init())
@@ -171,8 +203,11 @@ void InitContainer(Container* container, Background* background, Player* player,
 	// Carrega tempo de jogo
 	InitTimerGame(timerGame);
 
+	// Carrega a carteira do Player
+	InitWallet(wallet);
+
 	// Carregando Eventos do game 
-	InitEvent(container, background, player, mouse, timerGame);
+	InitEvent(container, background, player, mouse, timerGame, wallet);
 
 };
 void EndContainer(Container* container, Player* player) {
@@ -293,7 +328,7 @@ void fadeInNight(Background* background, float speed) {
 }
 
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
 {
 	ALLEGRO_TIMER* timer = NULL;
 	timer = al_create_timer(1.0 / FPS);
@@ -310,14 +345,15 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 
-	ControlEvent(container, background, player, mouse, timerGame);
+	ControlEvent(container, background, player, mouse, timerGame, wallet);
 }
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
 {
 
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
 	ALLEGRO_FONT* fontTimer = al_load_font("src/font/MINECRAFT.TTF", 20, NULL);
 	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
+	
 
 	int dir = DOWN, frame = 0;
 
@@ -331,6 +367,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		ALLEGRO_KEYBOARD_STATE keyState;
 
 		al_wait_for_event(container->eventQueue, &event);
+		LogWallet(fontTimer, wallet);
 
 		if (event.type == ALLEGRO_EVENT_TIMER) {
 			player->needRedraw = true;
@@ -348,18 +385,23 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			timerGame->seconds+=0.0005786;
 			if (timerGame->seconds >= 0.034716)
 			{
+				AddAmount(wallet);
 				timerGame->seconds = 0;
-
 				timerGame->minutes += 0.034716;
 				
+				
+
 				if (timerGame->minutes >= 0.2083)
 				{
 					timerGame->hours+= 0.2083;
 					timerGame->minutes = 0;
+					RemoveBalance(wallet);
+
 					if (timerGame->hours >= 4.9992)
 					{
 						timerGame->hours = 0;
 						attTimerGame(timerGame, 1, 60, 3600, 1);
+						
 					}
 				}
 			}
@@ -421,7 +463,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
 			if (event.mouse.button & 1) { //botão esquerdo
-
+				InvestmentReturn(wallet);
 			}
 			if (event.mouse.button & 2) { // botão direito
 
@@ -459,9 +501,12 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			InitMovingCloudBackground(background->cloud);
 
 			attCloudPosition(background->cloud);
-
+			
 		}
-				
+		
+		
+
+		
 
 	}
 

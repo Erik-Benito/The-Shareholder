@@ -19,6 +19,15 @@
 
 
 typedef struct {
+	float amount;
+	float lossPerDay;
+	float investedProfit;
+} Wallet;
+
+
+
+
+typedef struct {
 
 	int x;
 	int y;
