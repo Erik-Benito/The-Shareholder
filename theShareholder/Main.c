@@ -13,13 +13,15 @@
 #include "game.h"
 #include "mouse.h"
 #include "spritesheet.h"
+#include "collisions.h"
 
 Player player;
 Container container;
 Background background;
 TimerGame timeGame;
 Mouse mouse;
-
+//Hitbox object[4];
+Hitbox objects[5];
 
 // Prototypes
 void LogError(char* error);
@@ -27,7 +29,7 @@ void LogFrames(int fps, ALLEGRO_FONT* font, ALLEGRO_COLOR* COR);
 void LogHours(float hours, float minutes, int x, int y, ALLEGRO_FONT* font, ALLEGRO_COLOR cor);
 void ShowMoney(int x, int y, int value, ALLEGRO_FONT* font);
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame);
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
 void EndContainer(Container* container, Player* player);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc);
@@ -41,29 +43,31 @@ void attCloudPosition(Cloud cloud[]);
 void DrawCloudBackground(Cloud cloud[]);
 // Efeito de escuro
 void fadeInNight(Background* background, float speed);
-
+// Tempo dentro do Jogo
 void InitTimerGame(TimerGame *timerGame);
 void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int days);
-
+// Inicia o Jogador
 void InitPlayer(Player* player);
 void DrawPlayer(Player* player);
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame);
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame);
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
 
 void initMouse(Mouse* mouse);
 void DrawMouse(Mouse* mouse);
-
+//Movimentos do Jogador
 void PlayerMoveUp(Player* player);
 void PlayerMoveDown(Player* player);
 void PlayerMoveRight(Player* player);
 void PlayerMoveLeft(Player* player);
+//Colisões
+void InitCollision(Player* player, Hitbox objects[5]);
+bool HasCollision(Player* player, Hitbox objects[5]);
 
 //=================================//
 
-
 int main(void) {
-	InitContainer(&container, &background, &player, &mouse, &timeGame);
+	InitContainer(&container, &background, &player, &mouse, &timeGame, &objects);
 	return 0;
 };
 
@@ -111,12 +115,12 @@ void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int
 
 void InitPlayer(Player* player) {
 	
-	player->x = 100;
-	player->y = 100;
+	player->x = 430;
+	player->y = 50 + 120;
 	
 	player->speed = 10;
 	
-	player->sourceX = 100;
+	player->sourceX = 0;
 	player->sourceY = 0;
 	player->needRedraw = true;
 
@@ -161,8 +165,60 @@ void DrawMouse(Mouse* mouse) {
 	return;
 };
 
+void InitCollision(Player* player, Hitbox object[5]) {
+	object[0].initX = 130;
+	object[0].initY = 240 + 120;
+	object[0].endX = 420;
+	object[0].endY = 430 + 120;
+	
+	object[1].initX = 580;
+	object[1].initY = 240 + 120;
+	object[1].endX = 670;
+	object[1].endY = 640 + 120;
+	
+	object[2].initX = 820;
+	object[2].initY = 320 + 120;
+	object[2].endX = 870;
+	object[2].endY = 640 + 120;
+		
+	object[3].initX = -10;
+	object[3].initY = 150 + 120;
+	object[3].endX = 1000;
+	object[3].endY = 550 + 120;
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+}
+
+
+bool HasCollision (Player* player, Hitbox object[5]) {
+
+	object[4].initX = player->x + 10;
+	object[4].initY = player->y + 110;
+	object[4].endX = player->x + 80;
+	object[4].endY = player->y + 140;
+
+	al_draw_filled_rectangle(840, 318+120 , 860, WINDOW_HEIGHT, al_map_rgb(65, 166, 246));
+
+	if (object[4].endX >= object[0].initX && object[4].initX <= object[0].endX && object[4].endY >= object[0].initY && object[4].initY <= object[0].endY) {
+		return true;
+	}
+	else if (object[4].endX >= object[1].initX && object[4].initX <= object[1].endX && object[4].endY >= object[1].initY && object[4].initY <= object[1].endY) {
+		return true;
+	}
+	else if (object[4].endX >= object[2].initX && object[4].initX <= object[2].endX && object[4].endY >= object[2].initY && object[4].initY <= object[2].endY) {
+		return true;
+	}
+	else if (object[4].initX <= object[3].initX || object[4].endX >= object[3].endX) {
+		return true;
+	}
+	else if (object[4].initY <= object[3].initY || object[4].endY >= object[3].endY) {
+		return true;
+	}
+	else
+		return false;
+
+}
+
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
 {
 	//Inicia o alegro
 	if (!al_init())
@@ -201,7 +257,7 @@ void InitContainer(Container* container, Background* background, Player* player,
 	initMouse(mouse);
 
 	// Carregando Eventos do game 
-	InitEvent(container, background, player, mouse, timerGame);
+	InitEvent(container, background, player, mouse, timerGame, object);
 
 };
 void EndContainer(Container* container, Player* player) {
@@ -327,7 +383,7 @@ void fadeInNight(Background* background, float speed) {
 }
 
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
 {
 	ALLEGRO_TIMER* timer = NULL;
 	timer = al_create_timer(1.0 / FPS);
@@ -345,9 +401,10 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 
-	ControlEvent(container, background, player, mouse, timerGame);
+	InitCollision(player, objects);
+	ControlEvent(container, background, player, mouse, timerGame, object);
 }
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame)
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
 {
 
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
@@ -366,18 +423,48 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		ALLEGRO_EVENT event;
 		ALLEGRO_KEYBOARD_STATE keyState;
 
-		al_wait_for_event(container->eventQueue, &event);
+		al_wait_for_event(container->eventQueue, &event); 
 
-		if (event.type == ALLEGRO_EVENT_TIMER) {
+		if (event.type == ALLEGRO_EVENT_TIMER) 
+		{
 			player->needRedraw = true;
 			if (keys[UP])
-				PlayerMoveUp(player);
-			else if (keys[DOWN])
-				PlayerMoveDown(player);
-			else if (keys[LEFT])
-				PlayerMoveLeft(player);
-			else if (keys[RIGHT])
-				PlayerMoveRight(player);
+			{
+				if (HasCollision(player, objects)) 
+				{
+					PlayerMoveDown(player);
+				}
+				else 
+					PlayerMoveUp(player);
+				
+			}
+			else if (keys[DOWN]){
+				if (HasCollision(player, objects)) 
+				{
+					PlayerMoveUp(player);
+				}
+				else
+					PlayerMoveDown(player);
+
+			}
+			else if (keys[LEFT]){
+				if (HasCollision(player, object))
+				{
+					PlayerMoveRight(player);
+				} 
+				else
+					PlayerMoveLeft(player);
+
+			}
+			else if (keys[RIGHT]){
+				if (HasCollision(player, objects))
+				{
+					PlayerMoveLeft(player);
+				}
+				else
+					PlayerMoveRight(player);
+
+			}
 			else 
 				player->needRedraw = false;
 			

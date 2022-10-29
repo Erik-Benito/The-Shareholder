@@ -147,6 +147,7 @@
     <ClCompile Include="Main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="collisions.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="spritesheet.h" />
   </ItemGroup>
