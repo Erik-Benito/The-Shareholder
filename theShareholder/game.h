@@ -53,6 +53,7 @@ typedef struct {
 
 	bool hasFinished;
 	bool needRedraw;
+	bool isPcMode;
 
 	ALLEGRO_DISPLAY* window;
 	ALLEGRO_EVENT_QUEUE* eventQueue;
@@ -72,6 +73,15 @@ typedef struct {
 } Cloud;
 
 
+typedef struct {
+	int x;
+	int y;
+
+	int width;
+	int height;
+
+	ALLEGRO_BITMAP* image;
+} PcBackground;
 
 typedef struct {
 
@@ -82,9 +92,20 @@ typedef struct {
 	int height;
 
 	Cloud cloud[5];
+	PcBackground pcBackground;
 
 	ALLEGRO_BITMAP* image;
 
 } Background;
+
+
+typedef struct {
+
+	float amount;
+	float lossPerDay;
+	float investedProfit;
+
+} Wallet;
+
 
 #endif
