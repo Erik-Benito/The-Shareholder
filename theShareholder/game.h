@@ -107,12 +107,16 @@ typedef struct {
 	int investedProfit;
 	
 	int safeInvestedAmount;
+	int InsecureInvestedAmount;
 
 	int branches;
 	int products;
 	int employers;
 
 	int valueCompany;
+
+	int chanceToWin;
+	int valueToWin;
 
 } Wallet;
 

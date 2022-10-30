@@ -117,6 +117,8 @@ void InitWallet(Wallet* wallet) {
 	wallet->branches = 1;
 	wallet->employers = 1;
 	wallet->valueCompany = 1;
+	wallet->InsecureInvestedAmount = 1;
+	wallet->chanceToWin = 65;
 }
 void AddAmount(Wallet* wallet) {
 	wallet->amount+=50;
@@ -135,7 +137,7 @@ void RemoveBalance(Wallet* wallet, Container* container)
 	if (wallet->amount < 0)
 		reponse = al_show_native_message_box(NULL, "Ops!", "voce perdeu:", "Pressione F\nA sua empresa abriu falhencia \nDeseja reiniciar o Jogo", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
 
-	if (reponse)
+	if (reponse == 2)
 		container->hasFinished = true;
 
 }
@@ -562,7 +564,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		{
 			if (event.mouse.button & 1) { //botão esquerdo
 
-				// botão de add valor investimento
+				// botão de add valor investimento seguro
 				if (mouse->x >= 335 && mouse->x <= 490 && mouse->y >= 325 && mouse->y <= 370 && wallet->amount > investSafeForValue * 2)
 					investSafeForValue *= 2;
 
@@ -579,7 +581,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany;
-					wallet->valueCompany *= 2;
+					wallet->valueCompany *= 3;
 					wallet->products++;
 				}
 
@@ -595,8 +597,26 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany;
-					wallet->valueCompany *= 2;
+					wallet->valueCompany *= 4;
 					wallet->branches++;
+				}
+
+				// botão de add valor investimento inseguro
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 320 && mouse->y <= 340 && wallet->amount > wallet->InsecureInvestedAmount * 2)
+				{
+					wallet->InsecureInvestedAmount *= 2;
+				}
+
+				// botão de investir inseguro
+				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->InsecureInvestedAmount)
+				{
+					wallet->amount -= wallet->InsecureInvestedAmount;
+
+					wallet->chanceToWin = rand() % 99 + 1;
+					wallet->InsecureInvestedAmount = 1;
+
+					wallet->valueToWin = rand() % 100000 - 101000;
+					wallet->amount += wallet->valueToWin;
 				}
 
 
@@ -666,6 +686,15 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			// Valor do upgrade empresa:
 			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 580, 239, ALLEGRO_ALIGN_CENTRE, "Sua empresa ganha RS:%i/dia", wallet->valueCompany * 2);
 			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 580, 264, ALLEGRO_ALIGN_CENTRE, "Sua empresa gasta RS:%i/dia", wallet->valueCompany * 5);
+
+			// Valor investido
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 650, 335, ALLEGRO_ALIGN_CENTRE, "%i", wallet->InsecureInvestedAmount);
+
+			// Valor chance de ganhar
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 550, 379, ALLEGRO_ALIGN_CENTRE, "%i", wallet->chanceToWin);
+
+			// Valor ganho
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 580, 445, ALLEGRO_ALIGN_CENTRE, "%i", wallet->valueToWin);
 
 			DrawMouse(mouse);
 
