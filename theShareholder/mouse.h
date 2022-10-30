@@ -14,6 +14,7 @@
 typedef struct {
 	int x;
 	int y;
+	ALLEGRO_BITMAP* image;
 } Mouse;
 
 
