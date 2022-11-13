@@ -20,8 +20,7 @@ Container container;
 Background background;
 TimerGame timeGame;
 Mouse mouse;
-//Hitbox object[4];
-Hitbox objects[5];
+Hitbox hitboxs[4];
 
 // Prototypes
 void LogError(char* error);
@@ -29,7 +28,7 @@ void LogFrames(int fps, ALLEGRO_FONT* font, ALLEGRO_COLOR* COR);
 void LogHours(float hours, float minutes, int x, int y, ALLEGRO_FONT* font, ALLEGRO_COLOR cor);
 void ShowMoney(int x, int y, int value, ALLEGRO_FONT* font);
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5]);
 void EndContainer(Container* container, Player* player);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc);
@@ -49,11 +48,10 @@ void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int
 // Inicia o Jogador
 void InitPlayer(Player* player);
 void DrawPlayer(Player* player);
-
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5]);
-
-void initMouse(Mouse* mouse);
+//Linha de Eventos
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5]);
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5]);
+// Inicia o Mouse
 void DrawMouse(Mouse* mouse);
 //Movimentos do Jogador
 void PlayerMoveUp(Player* player);
@@ -61,13 +59,13 @@ void PlayerMoveDown(Player* player);
 void PlayerMoveRight(Player* player);
 void PlayerMoveLeft(Player* player);
 //Colisões
-void InitCollision(Player* player, Hitbox objects[5]);
-bool HasCollision(Player* player, Hitbox objects[5]);
+void InitCollision(Player* player, Hitbox hitboxs[5]);
+bool HasCollision(Player* player, Hitbox hitboxs[5]);
 
 //=================================//
 
 int main(void) {
-	InitContainer(&container, &background, &player, &mouse, &timeGame, &objects);
+	InitContainer(&container, &background, &player, &mouse, &timeGame, &hitboxs);
 	return 0;
 };
 
@@ -165,60 +163,66 @@ void DrawMouse(Mouse* mouse) {
 	return;
 };
 
-void InitCollision(Player* player, Hitbox object[5]) {
-	object[0].initX = 130;
-	object[0].initY = 240 + 120;
-	object[0].endX = 420;
-	object[0].endY = 430 + 120;
+void InitCollision(Player* player, Hitbox hitboxs[5]) {
+
+	// Player
+	hitboxs[4].initX = 10;
+	hitboxs[4].endX  = 80;
+	hitboxs[4].initY = 110;
+	hitboxs[4].endY  = 140;
+
+	// ilha de mesa no centro da sala
+	hitboxs[0].initX = 150;
+	hitboxs[0].initY = 250 + 120;
+	hitboxs[0].endX = 420;
+	hitboxs[0].endY = 480 + 120;
 	
-	object[1].initX = 580;
-	object[1].initY = 240 + 120;
-	object[1].endX = 670;
-	object[1].endY = 640 + 120;
+	// Mesa encostada na parede
+	hitboxs[1].initX = 580;
+	hitboxs[1].initY = 240 + 120;
+	hitboxs[1].endX = 730;
+	hitboxs[1].endY = 640 + 120;
 	
-	object[2].initX = 820;
-	object[2].initY = 320 + 120;
-	object[2].endX = 870;
-	object[2].endY = 640 + 120;
+	// Mesa do chefe
+	hitboxs[2].initX = 820;
+	hitboxs[2].initY = 320 + 120;
+	hitboxs[2].endX = 870;
+	hitboxs[2].endY = 640 + 120;
 		
-	object[3].initX = -10;
-	object[3].initY = 150 + 120;
-	object[3].endX = 1000;
-	object[3].endY = 550 + 120;
+	// limites do mapa
+	hitboxs[3].initX = -10;
+	hitboxs[3].initY = 150 + 120;
+	hitboxs[3].endX = 1000;
+	hitboxs[3].endY = 550 + 120;
 
 }
 
 
-bool HasCollision (Player* player, Hitbox object[5]) {
+bool HasCollision (Player* player, Hitbox hitboxs[5]) {
 
-	object[4].initX = player->x + 10;
-	object[4].initY = player->y + 110;
-	object[4].endX = player->x + 80;
-	object[4].endY = player->y + 140;
+	// Plaver
+	hitboxs[4].initX += 10;
+	hitboxs[4].endX += 80;
+	hitboxs[4].initY += 110;
+	hitboxs[4].endY += 140;
 
-	al_draw_filled_rectangle(840, 318+120 , 860, WINDOW_HEIGHT, al_map_rgb(65, 166, 246));
+	bool HasCollisionResponse = false;
 
-	if (object[4].endX >= object[0].initX && object[4].initX <= object[0].endX && object[4].endY >= object[0].initY && object[4].initY <= object[0].endY) {
-		return true;
-	}
-	else if (object[4].endX >= object[1].initX && object[4].initX <= object[1].endX && object[4].endY >= object[1].initY && object[4].initY <= object[1].endY) {
-		return true;
-	}
-	else if (object[4].endX >= object[2].initX && object[4].initX <= object[2].endX && object[4].endY >= object[2].initY && object[4].initY <= object[2].endY) {
-		return true;
-	}
-	else if (object[4].initX <= object[3].initX || object[4].endX >= object[3].endX) {
-		return true;
-	}
-	else if (object[4].initY <= object[3].initY || object[4].endY >= object[3].endY) {
-		return true;
-	}
-	else
-		return false;
-
+	if		(hitboxs[4].endX > hitboxs[0].initX  && hitboxs[4].initX < hitboxs[0].endX && hitboxs[4].endY > hitboxs[0].initY && hitboxs[4].initY < hitboxs[0].endY)
+		HasCollisionResponse = true;
+	else if (hitboxs[4].endX > hitboxs[1].initX  && hitboxs[4].initX < hitboxs[1].endX && hitboxs[4].endY > hitboxs[1].initY && hitboxs[4].initY < hitboxs[1].endY) 
+		HasCollisionResponse = true;
+	else if (hitboxs[4].endX > hitboxs[2].initX  && hitboxs[4].initX < hitboxs[2].endX && hitboxs[4].endY > hitboxs[2].initY && hitboxs[4].initY < hitboxs[2].endY) 
+		HasCollisionResponse = true;
+	else if (hitboxs[4].initX < hitboxs[3].initX || hitboxs[4].endX  > hitboxs[3].endX) 
+		HasCollisionResponse = true;
+	else if (hitboxs[4].initY < hitboxs[3].initY || hitboxs[4].endY  > hitboxs[3].endY) 
+		HasCollisionResponse = true;
+	
+	return HasCollisionResponse;
 }
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5])
 {
 	//Inicia o alegro
 	if (!al_init())
@@ -257,7 +261,7 @@ void InitContainer(Container* container, Background* background, Player* player,
 	initMouse(mouse);
 
 	// Carregando Eventos do game 
-	InitEvent(container, background, player, mouse, timerGame, object);
+	InitEvent(container, background, player, mouse, timerGame, hitboxs);
 
 };
 void EndContainer(Container* container, Player* player) {
@@ -383,7 +387,7 @@ void fadeInNight(Background* background, float speed) {
 }
 
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5])
 {
 	ALLEGRO_TIMER* timer = NULL;
 	timer = al_create_timer(1.0 / FPS);
@@ -401,10 +405,10 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 
-	InitCollision(player, objects);
-	ControlEvent(container, background, player, mouse, timerGame, object);
+	InitCollision(player, hitboxs);
+	ControlEvent(container, background, player, mouse, timerGame, hitboxs);
 }
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox object[5])
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Hitbox hitboxs[5])
 {
 
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
@@ -430,40 +434,40 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			player->needRedraw = true;
 			if (keys[UP])
 			{
-				if (HasCollision(player, objects)) 
-				{
-					PlayerMoveDown(player);
-				}
-				else 
+				hitboxs[4].initY = player->y - player->speed;
+				hitboxs[4].endY = player->y - player->speed;
+				hitboxs[4].initX = player->x;
+				hitboxs[4].endX = player->x;
+
+				if (!HasCollision(player, hitboxs)) 
 					PlayerMoveUp(player);
-				
 			}
 			else if (keys[DOWN]){
-				if (HasCollision(player, objects)) 
-				{
-					PlayerMoveUp(player);
-				}
-				else
-					PlayerMoveDown(player);
+				hitboxs[4].initY = player->y + player->speed;
+				hitboxs[4].endY = player->y + player->speed;
+				hitboxs[4].initX = player->x;
+				hitboxs[4].endX = player->x;
 
+				if (!HasCollision(player, hitboxs)) 
+					PlayerMoveDown(player);
 			}
 			else if (keys[LEFT]){
-				if (HasCollision(player, object))
-				{
-					PlayerMoveRight(player);
-				} 
-				else
+				hitboxs[4].initY = player->y;
+				hitboxs[4].endY = player->y;
+				hitboxs[4].initX = player->x - player->speed;
+				hitboxs[4].endX = player->x - player->speed;
+				
+				if (!HasCollision(player, hitboxs))
 					PlayerMoveLeft(player);
-
 			}
 			else if (keys[RIGHT]){
-				if (HasCollision(player, objects))
-				{
-					PlayerMoveLeft(player);
-				}
-				else
-					PlayerMoveRight(player);
+				hitboxs[4].initY = player->y;
+				hitboxs[4].endY = player->y;
+				hitboxs[4].initX = player->x + player->speed;
+				hitboxs[4].endX = player->x + player->speed;
 
+				if (!HasCollision(player, hitboxs))
+					PlayerMoveRight(player);
 			}
 			else 
 				player->needRedraw = false;
