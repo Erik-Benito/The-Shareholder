@@ -13,11 +13,13 @@
 #include "game.h"
 #include "mouse.h"
 #include "spritesheet.h"
+#include "collisions.h"
 
 Player player;
 Container container;
 Background background;
 TimerGame timeGame;
+Hitbox hitboxs[5];
 Mouse mouse;
 Wallet wallet;
 
@@ -32,13 +34,13 @@ void LogWallet(ALLEGRO_FONT* font, Wallet* wallet);
 
 void InvestmentReturn(Wallet* wallet);
 void AddAmount(Wallet* wallet);
-void RemoveBalance(Wallet* wallet);
+void RemoveBalance(Wallet* wallet, Container* container);
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet);
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5]);
 void EndContainer(Container* container, Player* player);
 
 void InitWallet(Wallet* wallet);
-void statusProgress(Wallet* wallet, int x, int y);
+void statusProgress(Wallet* wallet, int x1, int y1, int x2, int y2);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc);
 void DrawBackground(Background* background, TimerGame* timerGame, Container* container);
@@ -46,16 +48,16 @@ void DrawBackground(Background* background, TimerGame* timerGame, Container* con
 void InitMovingCloudBackground(Cloud cloud[]);
 void attCloudPosition(Cloud cloud[]);
 void DrawCloudBackground(Cloud cloud[]);
-void fadeInNight(Background* background, float speed);
+void fadeInNight(Background* background, float speed, Container* container, TimerGame* time);
 
-void InitTimerGame(TimerGame *timerGame);
-void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int days);
+void InitTimerGame(TimerGame* timerGame);
+void attTimerGame(TimerGame* timerGame, int hours, int minutes, int seconds, int days);
 
 void InitPlayer(Player* player);
 void DrawPlayer(Player* player);
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet);
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet);
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5]);
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5]);
 
 void initMouse(Mouse* mouse);
 void DrawMouse(Mouse* mouse);
@@ -65,11 +67,14 @@ void PlayerMoveDown(Player* player);
 void PlayerMoveRight(Player* player);
 void PlayerMoveLeft(Player* player);
 
+void InitCollision(Player* player, Hitbox hitboxs[5]);
+bool HasCollision(Player* player, Hitbox hitboxs[5]);
+
 //=================================//
 
 
 int main(void) {
-	InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet);
+	InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet, &hitboxs);
 	return 0;
 };
 
@@ -92,16 +97,16 @@ void LogWallet(ALLEGRO_FONT* font, Wallet* wallet)
 	al_draw_textf(font, al_map_rgb(0, 0, 0), 250, 250, ALLEGRO_ALIGN_CENTER, "RS:%d -> RS:1.000.000 ", wallet->amount);
 	return;
 };
-void LogHours(float hours, float minutes, int x, int y, ALLEGRO_FONT *font, ALLEGRO_COLOR cor) {
+void LogHours(float hours, float minutes, int x, int y, ALLEGRO_FONT* font, ALLEGRO_COLOR cor) {
 	al_draw_textf(font, cor, x, y, ALLEGRO_ALIGN_CENTRE, "%d : %d0", lround(hours * 4.8), lround(minutes * 28));
 	return;
 }
-void ShowMoney(int x, int y, int value, ALLEGRO_FONT* font) 
+void ShowMoney(int x, int y, int value, ALLEGRO_FONT* font)
 {
 	al_draw_textf(font, al_map_rgb(255, 255, 255), x, y, ALLEGRO_ALIGN_CENTRE, "RS:%d", value);
 	return;
 }
-void LogQtyInvestCompany(int x, int y, int value, ALLEGRO_FONT* font) 
+void LogQtyInvestCompany(int x, int y, int value, ALLEGRO_FONT* font)
 {
 	al_draw_textf(font, al_map_rgb(255, 255, 255), x, y, ALLEGRO_ALIGN_CENTRE, "%i", value);
 	return;
@@ -121,16 +126,16 @@ void InitWallet(Wallet* wallet) {
 	wallet->chanceToWin = 65;
 }
 void AddAmount(Wallet* wallet) {
-	wallet->amount+=50;
+	wallet->amount += 50;
 }
 void InvestmentReturn(Wallet* wallet)
 {
-	wallet->amount += ((wallet->safeInvestedAmount) * 2 / 100) + wallet->valueCompany* 2;
+	wallet->amount += ((wallet->safeInvestedAmount) * 2 / 100) + wallet->valueCompany * 2;
 	wallet->safeInvestedAmount += (wallet->safeInvestedAmount) * 2 / 100;
 }
 void RemoveBalance(Wallet* wallet, Container* container)
 {
-	wallet->amount -= wallet->valueCompany *5;
+	wallet->amount -= wallet->valueCompany * 5;
 
 	int reponse = 0;
 
@@ -143,7 +148,7 @@ void RemoveBalance(Wallet* wallet, Container* container)
 }
 
 
-void InitTimerGame(TimerGame *timerGame)
+void InitTimerGame(TimerGame* timerGame)
 {
 	timerGame->hours = 4.5826;
 	timerGame->minutes = 0;
@@ -155,7 +160,7 @@ void InitTimerGame(TimerGame *timerGame)
 	timerGame->days = 0;
 
 }
-void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int days) 
+void attTimerGame(TimerGame* timerGame, int hours, int minutes, int seconds, int days)
 {
 	timerGame->hoursTotal += hours;
 	timerGame->minutesTotal += minutes;
@@ -165,13 +170,13 @@ void attTimerGame(TimerGame *timerGame, int hours, int minutes, int seconds, int
 
 
 void InitPlayer(Player* player) {
-	
-	player->x = 100;
-	player->y = 100;
-	
+
+	player->x = 430;
+	player->y = 50 + 120;
+
 	player->speed = 10;
-	
-	player->sourceX = 100;
+
+	player->sourceX = 0;
 	player->sourceY = 0;
 	player->needRedraw = true;
 
@@ -208,7 +213,7 @@ void initMouse(Mouse* mouse) {
 
 	if (!mouse->image)
 		LogError("Falha ao carregar a imagem do mouse");
-	
+
 	return;
 }
 void DrawMouse(Mouse* mouse) {
@@ -219,7 +224,67 @@ void DrawMouse(Mouse* mouse) {
 };
 
 
-void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
+void InitCollision(Player* player, Hitbox hitboxs[5]) {
+
+	// Player
+	hitboxs[5].initX = 10;
+	hitboxs[5].endX = 80;
+	hitboxs[5].initY = 110;
+	hitboxs[5].endY = 140;
+
+	// ilha de mesa no centro da sala
+	hitboxs[0].initX = 150;
+	hitboxs[0].initY = 250 + 120;
+	hitboxs[0].endX = 420;
+	hitboxs[0].endY = 480 + 120;
+
+	// Mesa encostada na parede
+	hitboxs[1].initX = 580;
+	hitboxs[1].initY = 240 + 120;
+	hitboxs[1].endX = 730;
+	hitboxs[1].endY = 640 + 120;
+
+	// Mesa do chefe
+	hitboxs[2].initX = 820;
+	hitboxs[2].initY = 320 + 120;
+	hitboxs[2].endX = 870;
+	hitboxs[2].endY = 640 + 120;
+
+	// limites do mapa
+	hitboxs[3].initX = -10;
+	hitboxs[3].initY = 150 + 120;
+	hitboxs[3].endX = 1000;
+	hitboxs[3].endY = 550 + 120;
+
+}
+
+
+bool HasCollision(Player* player, Hitbox hitboxs[5]) {
+
+	// Plaver
+	hitboxs[5].initX += 10;
+	hitboxs[5].endX += 80;
+	hitboxs[5].initY += 110;
+	hitboxs[5].endY += 140;
+
+	bool HasCollisionResponse = false;
+
+	if (hitboxs[5].endX > hitboxs[0].initX && hitboxs[5].initX < hitboxs[0].endX && hitboxs[5].endY > hitboxs[0].initY && hitboxs[5].initY < hitboxs[0].endY)
+		HasCollisionResponse = true;
+	else if (hitboxs[5].endX > hitboxs[1].initX && hitboxs[5].initX < hitboxs[1].endX && hitboxs[5].endY > hitboxs[1].initY && hitboxs[5].initY < hitboxs[1].endY)
+		HasCollisionResponse = true;
+	else if (hitboxs[5].endX > hitboxs[2].initX && hitboxs[5].initX < hitboxs[2].endX && hitboxs[5].endY > hitboxs[2].initY && hitboxs[5].initY < hitboxs[2].endY)
+		HasCollisionResponse = true;
+	else if (hitboxs[5].initX < hitboxs[3].initX || hitboxs[5].endX  > hitboxs[3].endX)
+		HasCollisionResponse = true;
+	else if (hitboxs[5].initY < hitboxs[3].initY || hitboxs[5].endY  > hitboxs[3].endY)
+		HasCollisionResponse = true;
+
+	return HasCollisionResponse;
+}
+
+
+void InitContainer(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5])
 {
 	//Inicia o alegro
 	if (!al_init())
@@ -246,7 +311,7 @@ void InitContainer(Container* container, Background* background, Player* player,
 
 	// Carrega Background
 	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("src/imgs/oficce.bmp"), al_load_bitmap("src/imgs/pcMode.png"));
-	
+
 	// Criando Personagem
 	InitPlayer(player);
 
@@ -260,7 +325,7 @@ void InitContainer(Container* container, Background* background, Player* player,
 	InitWallet(wallet);
 
 	// Carregando Eventos do game 
-	InitEvent(container, background, player, mouse, timerGame, wallet);
+	InitEvent(container, background, player, mouse, timerGame, wallet, hitboxs);
 
 };
 void EndContainer(Container* container, Player* player) {
@@ -277,7 +342,7 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 	background->pcBackground.image = NULL;
 
 	background->x = x;
-	background->y = y ;
+	background->y = y;
 	background->image = image;
 	background->width = width;
 	background->height = height;
@@ -287,8 +352,8 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 	background->pcBackground.width = width;
 	background->pcBackground.height = height;
 	background->pcBackground.image = imagePc;
-	
-	for(int i = 0; i < 5; i ++)
+
+	for (int i = 0; i < 5; i++)
 	{
 		background->cloud[i].speed = 15;
 		background->cloud[i].active = false;
@@ -300,14 +365,13 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 	if (!background->image)
 		LogError("Falha ao carregar a imagem do escritorio");
 }
-void DrawBackground(Background* background, TimerGame*  timerGame, Container* container)
+void DrawBackground(Background* background, TimerGame* timerGame, Container* container)
 {
 
 	if (!container->isPcMode)
 	{
-		printf("%d : %d \n", lround(timerGame->hours * 4.8), lround(timerGame->minutes * 28));
 		al_draw_bitmap(background->image, background->x, background->y + 120, 0);
-		
+
 		if (lround(timerGame->hours * 4.8) < 19 && lround(timerGame->hours * 4.8) > 6) {
 			al_draw_filled_rectangle(0, 120, WINDOW_WIDTH, 0, al_map_rgb(65, 166, 246));
 
@@ -322,14 +386,14 @@ void DrawBackground(Background* background, TimerGame*  timerGame, Container* co
 		else
 			al_draw_filled_rectangle(0, 120, WINDOW_WIDTH, 0, al_map_rgb(0, 0, 0));
 	}
-	else 
+	else
 		al_draw_bitmap(background->pcBackground.image, background->x, background->y, 0);
 }
 
 
 void InitMovingCloudBackground(Cloud cloud[])
 {
-	for (int i = 0; i < 5; i++) 
+	for (int i = 0; i < 5; i++)
 	{
 		if (!cloud[i].active)
 		{
@@ -341,9 +405,9 @@ void InitMovingCloudBackground(Cloud cloud[])
 				cloud[i].image = al_load_bitmap("src/imgs/cloud.png");
 			else
 				cloud[i].image = al_load_bitmap("src/imgs/cloud2.png");
-				
-			break;	
-		}	
+
+			break;
+		}
 	}
 	return;
 }
@@ -359,7 +423,8 @@ void attCloudPosition(Cloud cloud[]) {
 				cloud[i].active = false;
 				al_destroy_bitmap(cloud[i].image);
 			}
-;		}
+			;
+		}
 	}
 	return;
 }
@@ -372,7 +437,7 @@ void DrawCloudBackground(Cloud cloud[]) {
 }
 
 
-void fadeInNight(Background* background, float speed, Container *container, TimerGame* timer) {
+void fadeInNight(Background* background, float speed, Container* container, TimerGame* timer) {
 
 
 	ALLEGRO_BITMAP* image = NULL;
@@ -401,22 +466,22 @@ void fadeInNight(Background* background, float speed, Container *container, Time
 		al_draw_tinted_bitmap(image, al_map_rgba(alfa, alfa, alfa, alfa), background->x, y, 0);
 
 		al_rest(0.1);
-		
+
 	}
 	return;
 }
 
 
-void statusProgress(Wallet* wallet, int x1, int y1, int x2, int y2) 
+void statusProgress(Wallet* wallet, int x1, int y1, int x2, int y2)
 {
-	int percentageMoney = wallet->amount * 100/ 1000000;
+	int percentageMoney = wallet->amount * 100 / 1000000;
 	int sizeRectangle = ((x2 - x1) * percentageMoney / 100) + x1 + 30;
 
 	al_draw_filled_rectangle(x1, y1, sizeRectangle, y2, al_map_rgb(83, 255, 74));
 };
 
 
-void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
+void InitEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5])
 {
 	ALLEGRO_TIMER* timer = NULL;
 	timer = al_create_timer(1.0 / FPS);
@@ -434,9 +499,10 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 	al_register_event_source(container->eventQueue, al_get_mouse_event_source());
 	al_register_event_source(container->eventQueue, al_get_keyboard_event_source());
 
-	ControlEvent(container, background, player, mouse, timerGame, wallet);
+	InitCollision(player, hitboxs);
+	ControlEvent(container, background, player, mouse, timerGame, wallet, hitboxs);
 }
-void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet)
+void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5])
 {
 
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
@@ -457,16 +523,46 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 		al_wait_for_event(container->eventQueue, &event);
 
-		if (event.type == ALLEGRO_EVENT_TIMER) {
+		if (event.type == ALLEGRO_EVENT_TIMER)
+		{
 			player->needRedraw = true;
 			if (keys[UP])
-				PlayerMoveUp(player);
-			else if (keys[DOWN])
-				PlayerMoveDown(player);
-			else if (keys[LEFT])
-				PlayerMoveLeft(player);
-			else if (keys[RIGHT])
-				PlayerMoveRight(player);
+			{
+				hitboxs[5].initY = player->y - player->speed;
+				hitboxs[5].endY = player->y - player->speed;
+				hitboxs[5].initX = player->x;
+				hitboxs[5].endX = player->x;
+
+				if (!HasCollision(player, hitboxs))
+					PlayerMoveUp(player);
+			}
+			else if (keys[DOWN]) {
+				hitboxs[5].initY = player->y + player->speed;
+				hitboxs[5].endY = player->y + player->speed;
+				hitboxs[5].initX = player->x;
+				hitboxs[5].endX = player->x;
+
+				if (!HasCollision(player, hitboxs))
+					PlayerMoveDown(player);
+			}
+			else if (keys[LEFT]) {
+				hitboxs[5].initY = player->y;
+				hitboxs[5].endY = player->y;
+				hitboxs[5].initX = player->x - player->speed;
+				hitboxs[5].endX = player->x - player->speed;
+
+				if (!HasCollision(player, hitboxs))
+					PlayerMoveLeft(player);
+			}
+			else if (keys[RIGHT]) {
+				hitboxs[5].initY = player->y;
+				hitboxs[5].endY = player->y;
+				hitboxs[5].initX = player->x + player->speed;
+				hitboxs[5].endX = player->x + player->speed;
+
+				if (!HasCollision(player, hitboxs))
+					PlayerMoveRight(player);
+			}
 			else
 				player->needRedraw = false;
 
@@ -478,6 +574,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			timerGame->seconds += 0.0005786;
 			if (timerGame->seconds >= 0.034716)
 			{
+
 				timerGame->seconds = 0;
 				timerGame->minutes += 0.034716;
 
@@ -562,7 +659,8 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		}
 		else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
-			if (event.mouse.button & 1) { //botão esquerdo
+			if (event.mouse.button & 1) {
+				//botão esquerdo
 
 				// botão de add valor investimento seguro
 				if (mouse->x >= 335 && mouse->x <= 490 && mouse->y >= 325 && mouse->y <= 370 && wallet->amount > investSafeForValue * 2)
