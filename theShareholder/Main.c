@@ -135,7 +135,7 @@ void RemoveBalance(Wallet* wallet, Container* container)
 	int reponse = 0;
 
 	if (wallet->amount < 0)
-		reponse = al_show_native_message_box(NULL, "Ops!", "voce perdeu:", "Pressione F\nA sua empresa abriu falhencia \nDeseja reiniciar o Jogo", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
+		reponse = al_show_native_message_box(NULL, "Ops!", "voce perdeu:", "Pressione F\nA sua empresa abriu falencia \nDeseja reiniciar o Jogo", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
 
 	if (reponse == 2)
 		container->hasFinished = true;
@@ -467,23 +467,23 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				PlayerMoveLeft(player);
 			else if (keys[RIGHT])
 				PlayerMoveRight(player);
-			else 
+			else
 				player->needRedraw = false;
-			
+
 			// 1 para 1
 			// seconds = 0,0005786
 			// minutes = 0,034716
 			// hours   = 0,2083
-			
-			timerGame->seconds+=0.0005786;
+
+			timerGame->seconds += 0.0005786;
 			if (timerGame->seconds >= 0.034716)
 			{
 				timerGame->seconds = 0;
 				timerGame->minutes += 0.034716;
-				
+
 				if (timerGame->minutes >= 0.2083)
 				{
-					timerGame->hours+= 0.2083;
+					timerGame->hours += 0.2083;
 					timerGame->minutes = 0;
 
 					if (timerGame->hours >= 4.9992)
@@ -570,9 +570,9 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 				// botão de investir seguro
 				if (mouse->x >= 360 && mouse->x <= 460 && mouse->y >= 470 && mouse->y <= 500 && wallet->amount > investSafeForValue)
-				{	
-					wallet->amount-= investSafeForValue;
-					wallet->safeInvestedAmount+= investSafeForValue;
+				{
+					wallet->amount -= investSafeForValue;
+					wallet->safeInvestedAmount += investSafeForValue;
 
 					investSafeForValue = 5;
 				}
@@ -610,13 +610,21 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				// botão de investir inseguro
 				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->InsecureInvestedAmount)
 				{
-					wallet->amount -= wallet->InsecureInvestedAmount;
 
-					wallet->chanceToWin = rand() % 99 + 1;
-					wallet->InsecureInvestedAmount = 1;
+					wallet->chanceToWin = 100;
 
-					wallet->valueToWin = rand() % 100000 - 101000;
-					wallet->amount += wallet->valueToWin;
+					int diferenceToCalc = (wallet->chanceToWin - 100) * (-1);
+					int addToChance = wallet->chanceToWin - diferenceToCalc;
+					int chance = rand() % 99 + 1;
+
+					if ((chance + addToChance) > 50)
+					{
+						wallet->amount += 100000;
+					}
+					else
+					{
+						wallet->amount -= 50;
+					}
 				}
 
 
@@ -627,10 +635,10 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		}
 
 		if (player->needRedraw)
-			player->sourceX += al_get_bitmap_width(player->spritePlayer)/4;
+			player->sourceX += al_get_bitmap_width(player->spritePlayer) / 4;
 		else
 			player->sourceX = 0;
-		
+
 
 		if (player->sourceX >= al_get_bitmap_width(player->spritePlayer))
 			player->sourceX = 0;
@@ -643,11 +651,11 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			DrawPlayer(player);
 
-			LogHours(timerGame->hours, timerGame->minutes, 500, 140, fontTimer, al_map_rgb(255, 0 ,0));
+			LogHours(timerGame->hours, timerGame->minutes, 500, 140, fontTimer, al_map_rgb(255, 0, 0));
 
 			al_flip_display();
 
-			DrawBackground(background,timerGame, container);
+			DrawBackground(background, timerGame, container);
 
 			DrawCloudBackground(background->cloud);
 			InitMovingCloudBackground(background->cloud);
@@ -660,7 +668,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			container->needRedraw = false;
 
 			LogHours(timerGame->hours, timerGame->minutes, 960, 625, fontTimer, al_map_rgb(0, 0, 0));
-			
+
 			// Exibi os valores de dinheiro
 			statusProgress(wallet, 107, 248, 385, 265);
 			LogWallet(fontInvest, wallet);
@@ -673,15 +681,15 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			// Products
 			LogQtyInvestCompany(195, 449, wallet->products, fontInvest);
-			
+
 			// Branches
 			LogQtyInvestCompany(195, 393, wallet->branches, fontInvest);
-			
+
 			// Employers
 			LogQtyInvestCompany(195, 336, wallet->employers, fontInvest);
 
 			// Valor do upgrade empresa:
-			al_draw_textf(fontInvest, al_map_rgb(0,0,0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany);
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany);
 
 			// Valor do upgrade empresa:
 			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 580, 239, ALLEGRO_ALIGN_CENTRE, "Sua empresa ganha RS:%i/dia", wallet->valueCompany * 2);
@@ -702,12 +710,11 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			DrawBackground(background, timerGame, container);
 		}
-		
+
 		if (frame >= FPS)
 			frame--;
 		else
 			frame++;
-
 	}
 
 	EndContainer(container, player);
