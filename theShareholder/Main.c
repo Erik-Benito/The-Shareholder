@@ -94,7 +94,7 @@ void LogFrames(int fps, ALLEGRO_FONT* font, ALLEGRO_COLOR* COR)
 };
 void LogWallet(ALLEGRO_FONT* font, Wallet* wallet)
 {
-	al_draw_textf(font, al_map_rgb(0, 0, 0), 250, 250, ALLEGRO_ALIGN_CENTER, "RS:%d -> RS:1.000.000 ", wallet->amount);
+	al_draw_textf(font, al_map_rgb(0, 0, 0), 152, 252, ALLEGRO_ALIGN_CENTER, "RS:%d", wallet->amount);
 	return;
 };
 void LogHours(float hours, float minutes, int x, int y, ALLEGRO_FONT* font, ALLEGRO_COLOR cor) {
@@ -114,9 +114,9 @@ void LogQtyInvestCompany(int x, int y, int value, ALLEGRO_FONT* font)
 
 
 void InitWallet(Wallet* wallet) {
-	wallet->amount = 100;
+	wallet->amount = 10000;
 	wallet->investedProfit = 0;
-	wallet->lossPerDay = 0;
+	wallet->lossPerDay = 5;
 	wallet->profitPerDay = 0;
 	wallet->products = 1;
 	wallet->branches = 1;
@@ -130,12 +130,16 @@ void AddAmount(Wallet* wallet) {
 }
 void InvestmentReturn(Wallet* wallet)
 {
-	wallet->amount += ((wallet->safeInvestedAmount) * 2 / 100) + wallet->valueCompany * 2;
+
 	wallet->safeInvestedAmount += (wallet->safeInvestedAmount) * 2 / 100;
+	wallet->amount += wallet->safeInvestedAmount + log10(wallet->valueCompany) * 0.8;
+
+	wallet->lossPerDay += wallet->valueCompany;
+	wallet->profitPerDay = 0.8 * (wallet->valueCompany) * log10(wallet->valueCompany);
 }
 void RemoveBalance(Wallet* wallet, Container* container)
 {
-	wallet->amount -= wallet->valueCompany * 5;
+	wallet->amount -= wallet->lossPerDay;
 
 	int reponse = 0;
 
@@ -178,6 +182,9 @@ void InitPlayer(Player* player) {
 
 	player->sourceX = 0;
 	player->sourceY = 0;
+	player->fpsPlayer = 0;
+
+
 	player->needRedraw = true;
 
 	player->spritePlayer = al_load_bitmap("src/imgs/player.png");
@@ -475,9 +482,9 @@ void fadeInNight(Background* background, float speed, Container* container, Time
 void statusProgress(Wallet* wallet, int x1, int y1, int x2, int y2)
 {
 	int percentageMoney = wallet->amount * 100 / 1000000;
-	int sizeRectangle = ((x2 - x1) * percentageMoney / 100) + x1 + 30;
+	int sizeRectangle   = ((x2 - x1) * percentageMoney / 100) + x1;
 
-	al_draw_filled_rectangle(x1, y1, sizeRectangle, y2, al_map_rgb(83, 255, 74));
+	al_draw_filled_rectangle(x1, y1, percentageMoney >= 100 ? x2 : sizeRectangle, y2, al_map_rgb(83, 255, 74));
 };
 
 
@@ -510,7 +517,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	ALLEGRO_FONT* fontTimer = al_load_font("src/font/MINECRAFT.TTF", 20, NULL);
 	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
 
-	int dir = DOWN, frame = 0, investSafeForValue = 5, investDangerForValue = 0, playerrefresh = 0;
+	int dir = DOWN, frame = 0, investSafeForValue = 5, investDangerForValue = 0;
 
 	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
 
@@ -520,7 +527,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	{
 		ALLEGRO_EVENT event;
 		ALLEGRO_KEYBOARD_STATE keyState;
-		playerrefresh++;
+		player->fpsPlayer++;
 
 		al_wait_for_event(container->eventQueue, &event);
 
@@ -569,7 +576,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			// 1 para 1
 			// seconds = 0,0005786
-			// minutes = 0,034716
+			// minutes = 0,0034716
 			// hours   = 0,2083
 
 			timerGame->seconds += 0.0005786;
@@ -679,24 +686,24 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				// Add investimento na empresa: Product
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany)
 				{
-					wallet->amount -= wallet->valueCompany;
-					wallet->valueCompany *= 3;
+					wallet->amount -= wallet->valueCompany * 2;
+					wallet->valueCompany +=5;
 					wallet->products++;
 				}
 
 				// Add investimento na empresa: employers
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 325 && mouse->y <= 345 && wallet->amount > wallet->valueCompany)
 				{
-					wallet->amount -= wallet->valueCompany;
-					wallet->valueCompany *= 2;
+					wallet->amount -= wallet->valueCompany * 2;
+					wallet->valueCompany +=5;
 					wallet->employers++;
 				}
 
 				// Add investimento na empresa: branches
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany)
 				{
-					wallet->amount -= wallet->valueCompany;
-					wallet->valueCompany *= 4;
+					wallet->amount -= wallet->valueCompany * 2;
+					wallet->valueCompany += 5;
 					wallet->branches++;
 				}
 
@@ -733,7 +740,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			}
 		}
 
-		if(playerrefresh == 5)
+		if(player->fpsPlayer == 4)
 		{
 			if (player->needRedraw)
 				player->sourceX += al_get_bitmap_width(player->spritePlayer) / 4;
@@ -745,7 +752,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				player->sourceX = 0;
 
 
-			playerrefresh = 0;
+			player->fpsPlayer = 0;
 		}
 
 		player->sourceY = dir * al_get_bitmap_height(player->spritePlayer) / 4;
@@ -774,40 +781,49 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			LogHours(timerGame->hours, timerGame->minutes, 960, 625, fontTimer, al_map_rgb(0, 0, 0));
 
-			// Exibi os valores de dinheiro
-			statusProgress(wallet, 107, 248, 385, 265);
-			LogWallet(fontInvest, wallet);
-
 			// valor investido
-			ShowMoney(415, 358, investSafeForValue, fontInvest);
-
+			ShowMoney(411, 364, investSafeForValue, fontInvest);
+			
 			// valor para investir
-			ShowMoney(415, 445, wallet->safeInvestedAmount, fontInvest);
+			ShowMoney(410, 440, wallet->safeInvestedAmount, fontInvest);
+
+			
+			// Valor do upgrade empresa:
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany * 2);
 
 			// Products
-			LogQtyInvestCompany(195, 449, wallet->products, fontInvest);
+			LogQtyInvestCompany(197, 454, wallet->products, fontInvest);
 
 			// Branches
-			LogQtyInvestCompany(195, 393, wallet->branches, fontInvest);
+			LogQtyInvestCompany(197, 397, wallet->branches, fontInvest);
 
 			// Employers
-			LogQtyInvestCompany(195, 336, wallet->employers, fontInvest);
+			LogQtyInvestCompany(197, 340, wallet->employers, fontInvest);
 
-			// Valor do upgrade empresa:
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany);
-
-			// Valor do upgrade empresa:
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 580, 239, ALLEGRO_ALIGN_CENTRE, "Sua empresa ganha RS:%i/dia", wallet->valueCompany * 2);
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 580, 264, ALLEGRO_ALIGN_CENTRE, "Sua empresa gasta RS:%i/dia", wallet->valueCompany * 5);
-
-			// Valor investido
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 650, 335, ALLEGRO_ALIGN_CENTRE, "%i", wallet->InsecureInvestedAmount);
 
 			// Valor chance de ganhar
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 550, 379, ALLEGRO_ALIGN_CENTRE, "%i", wallet->chanceToWin);
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 555, 378, ALLEGRO_ALIGN_CENTRE, "%i", wallet->chanceToWin);
 
-			// Valor ganho
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 580, 445, ALLEGRO_ALIGN_CENTRE, "%i", wallet->valueToWin);
+			// Valor investido inseguro
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 624, 448, ALLEGRO_ALIGN_CENTRE, "%i", wallet->InsecureInvestedAmount);
+
+			// Valor mutiplicador
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 675, 334, ALLEGRO_ALIGN_CENTRE, "%i", wallet->valueToWin);
+
+
+			// Carteira
+			LogWallet(fontInvest, wallet);
+
+			// Status de progess
+			statusProgress(wallet, 267, 246, 473, 266);
+
+			// TexT 1000000
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 375, 252, ALLEGRO_ALIGN_CENTRE, "RS:100.000.00");
+
+			// Valor do upgrade empresa:
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 620, 218, ALLEGRO_ALIGN_CENTRE, "RS:%i", wallet->profitPerDay);
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 620, 247, ALLEGRO_ALIGN_CENTRE, "RS:%i",  wallet->lossPerDay);
+
 
 			DrawMouse(mouse);
 

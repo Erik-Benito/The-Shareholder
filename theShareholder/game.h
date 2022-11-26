@@ -25,8 +25,10 @@ typedef struct {
 	
 	int sourceX;
 	int sourceY;
-	bool needRedraw;
 
+	int fpsPlayer;
+	bool needRedraw;
+	
 	ALLEGRO_BITMAP *spritePlayer;
 
 } Player;
