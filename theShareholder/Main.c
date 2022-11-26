@@ -113,6 +113,8 @@ void LogQtyInvestCompany(int x, int y, int value, ALLEGRO_FONT* font)
 }
 
 
+// (log(10,20))^(x)
+
 void InitWallet(Wallet* wallet) {
 	wallet->amount = 100;
 	wallet->investedProfit = 0;
@@ -569,7 +571,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			// 1 para 1
 			// seconds = 0,0005786
-			// minutes = 0,034716
+			// minutes = 0,0034716
 			// hours   = 0,2083
 
 			timerGame->seconds += 0.0005786;
@@ -649,6 +651,31 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				fadeInNight(background, 1, container, timerGame, player);
 
 				break;
+			case ALLEGRO_KEY_E:
+				if (timerGame->hours < 0.2083 * 6) {
+					//                    |H |MIN |SEC  |Day
+					float subAuxHours = (0.2083 * 6) - timerGame->hours;
+					float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes; 
+					float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
+					attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
+					//----(Caso a hora seja MENOR que 6 AM)----//
+					timerGame->hours = (0.2083 * 6);
+				}
+				else {
+					float subAuxHours = (0.2083 * 23) - timerGame->hours;
+					float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes;
+					float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
+					//                    |H |MIN |SEC  |Day
+					attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
+					//----(Caso a hora seja MAIOR que 6 AM)----//
+					timerGame->hours = (0.2083 * 6);
+
+				}
+
+				InvestmentReturn(wallet);
+				RemoveBalance(wallet, container);
+
+				break;
 			}
 		}
 		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES)
@@ -656,7 +683,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			mouse->x = event.mouse.x;
 			mouse->y = event.mouse.y;
 
-			printf("x:%d   |   y:%d\n", mouse->x, mouse->y);
+			printf("X:%d | Y:%d\n", mouse->x, mouse->y);
 		}
 		else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
