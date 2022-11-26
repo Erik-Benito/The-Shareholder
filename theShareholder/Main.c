@@ -510,7 +510,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	ALLEGRO_FONT* fontTimer = al_load_font("src/font/MINECRAFT.TTF", 20, NULL);
 	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
 
-	int dir = DOWN, frame = 0, investSafeForValue = 5, investDangerForValue = 0;
+	int dir = DOWN, frame = 0, investSafeForValue = 5, investDangerForValue = 0, playerrefresh = 0;
 
 	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
 
@@ -520,6 +520,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	{
 		ALLEGRO_EVENT event;
 		ALLEGRO_KEYBOARD_STATE keyState;
+		playerrefresh++;
 
 		al_wait_for_event(container->eventQueue, &event);
 
@@ -732,14 +733,20 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			}
 		}
 
-		if (player->needRedraw)
-			player->sourceX += al_get_bitmap_width(player->spritePlayer) / 4;
-		else
-			player->sourceX = 0;
+		if(playerrefresh == 5)
+		{
+			if (player->needRedraw)
+				player->sourceX += al_get_bitmap_width(player->spritePlayer) / 4;
+			else
+				player->sourceX = 0;
 
 
-		if (player->sourceX >= al_get_bitmap_width(player->spritePlayer))
-			player->sourceX = 0;
+			if (player->sourceX >= al_get_bitmap_width(player->spritePlayer))
+				player->sourceX = 0;
+
+
+			playerrefresh = 0;
+		}
 
 		player->sourceY = dir * al_get_bitmap_height(player->spritePlayer) / 4;
 
