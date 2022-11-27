@@ -15,14 +15,6 @@
 #include "spritesheet.h"
 #include "collisions.h"
 
-Player player;
-Container container;
-Background background;
-TimerGame timeGame;
-Hitbox hitboxs[5];
-Mouse mouse;
-Wallet wallet;
-
 
 // Prototypes
 void LogError(char* error);
@@ -72,9 +64,17 @@ bool HasCollision(Player* player, Hitbox hitboxs[5]);
 
 //=================================//
 
+Player player;
+Container container;
+Background background;
+TimerGame timerGame;
+Hitbox hitboxs[5];
+Mouse mouse;
+Wallet wallet;
 
 int main(void) {
-	InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet, &hitboxs);
+
+	InitContainer(&container, &background, &player, &mouse, &timerGame, &wallet, &hitboxs);
 	return 0;
 };
 
@@ -126,6 +126,9 @@ void InitWallet(Wallet* wallet) {
 	wallet->valueCompany = 1;
 	wallet->InsecureInvestedAmount = 1;
 	wallet->chanceToWin = 65;
+	wallet->valueToWin = 65;
+	wallet->safeInvestedAmount = 0;
+
 }
 void AddAmount(Wallet* wallet) {
 	wallet->amount += 50;
@@ -842,7 +845,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 624, 448, ALLEGRO_ALIGN_CENTRE, "%i", wallet->InsecureInvestedAmount);
 
 			// Valor mutiplicador
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 675, 334, ALLEGRO_ALIGN_CENTRE, "%i", wallet->valueToWin);
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 682, 335, ALLEGRO_ALIGN_CENTRE, "%i", wallet->valueToWin);
 
 
 			// Carteira
@@ -852,11 +855,11 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			statusProgress(wallet, 267, 246, 473, 266);
 
 			// TexT 1000000
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 375, 252, ALLEGRO_ALIGN_CENTRE, "RS:100.000.00");
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 405, 252, ALLEGRO_ALIGN_CENTRE, "RS:100.000.00");
 
 			// Valor do upgrade empresa:
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 620, 218, ALLEGRO_ALIGN_CENTRE, "RS:%i", wallet->profitPerDay);
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 620, 247, ALLEGRO_ALIGN_CENTRE, "RS:%i",  wallet->lossPerDay);
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 655, 227, ALLEGRO_ALIGN_CENTRE, "RS:%i", wallet->profitPerDay);
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 655, 254, ALLEGRO_ALIGN_CENTRE, "RS:%i",  wallet->lossPerDay);
 
 
 			DrawMouse(mouse);
@@ -902,8 +905,17 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 		if (reponse == 1)
 		{
+
+			Player playerNew;
+			Container containerNew;
+			Background backgroundNew;
+			TimerGame timerGameNew;
+			Hitbox hitboxsNew[5];
+			Mouse mouseNew;
+			Wallet walletNew;
+
 			EndContainer(container, player);
-			InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet, &hitboxs);
+			InitContainer(&containerNew, &backgroundNew, &playerNew, &mouseNew, &timerGameNew, &walletNew, &hitboxsNew);
 
 		}
 	}
