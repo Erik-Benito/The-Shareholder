@@ -94,6 +94,23 @@ typedef struct {
 } Office2Background;
 
 typedef struct {
+	int x;
+	int y;
+
+	int width;
+	int height;
+
+	ALLEGRO_BITMAP* dog;
+	ALLEGRO_BITMAP* girl1;
+	ALLEGRO_BITMAP* girl2;
+	ALLEGRO_BITMAP* guy1;
+	ALLEGRO_BITMAP* guy2;
+	ALLEGRO_BITMAP* guy3;
+	ALLEGRO_BITMAP* vendingmachine;
+
+} Scenary;
+
+typedef struct {
 
 	float x;
 	float y;
