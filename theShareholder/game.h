@@ -120,6 +120,7 @@ typedef struct {
 	int chanceToWin;
 	int valueToWin;
 
+	bool hasWin;
 } Wallet;
 
 
