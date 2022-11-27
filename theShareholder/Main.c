@@ -142,15 +142,6 @@ void InvestmentReturn(Wallet* wallet)
 void RemoveBalance(Wallet* wallet, Container* container)
 {
 	wallet->amount -= wallet->lossPerDay;
-
-	int reponse = 0;
-
-	if (wallet->amount < 0)
-		reponse = al_show_native_message_box(NULL, "Ops!", "voce perdeu:", "Pressione F\nA sua empresa abriu falencia \nDeseja reiniciar o Jogo", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
-
-	if (reponse == 2)
-		container->hasFinished = true;
-
 }
 
 
@@ -340,7 +331,6 @@ void InitContainer(Container* container, Background* background, Player* player,
 void EndContainer(Container* container, Player* player) {
 
 	al_destroy_display(container->window);
-	al_destroy_bitmap(player->spritePlayer);
 	al_destroy_event_queue(container->eventQueue);
 }
 
@@ -513,9 +503,9 @@ void InitEvent(Container* container, Background* background, Player* player, Mou
 }
 void ControlEvent(Container* container, Background* background, Player* player, Mouse* mouse, TimerGame* timerGame, Wallet* wallet, Hitbox hitboxs[5])
 {
-
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
 	ALLEGRO_FONT* fontInvest = al_load_font("src/font/InvestFont.ttf", 12, NULL);
+	ALLEGRO_FONT* fontText = al_load_font("src/font/KOMTXTK_.ttf", 16, NULL);
 	ALLEGRO_FONT* fontTimer = al_load_font("src/font/MINECRAFT.TTF", 20, NULL);
 	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
 
@@ -659,28 +649,31 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 				break;
 			case ALLEGRO_KEY_E:
-				if (timerGame->hours < 0.2083 * 6) {
-					//                    |H |MIN |SEC  |Day
-					float subAuxHours = (0.2083 * 6) - timerGame->hours;
-					float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes; 
-					float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
-					attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
-					//----(Caso a hora seja MENOR que 6 AM)----//
-					timerGame->hours = (0.2083 * 6);
-				}
-				else {
-					float subAuxHours = (0.2083 * 23) - timerGame->hours;
-					float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes;
-					float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
-					//                    |H |MIN |SEC  |Day
-					attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
-					//----(Caso a hora seja MAIOR que 6 AM)----//
-					timerGame->hours = (0.2083 * 6);
+				if (player->x > 420 && player->x < 520 && player->y < 180)
+				{
+					if (timerGame->hours < 0.2083 * 6) {
+						//                    |H |MIN |SEC  |Day
+						float subAuxHours = (0.2083 * 6) - timerGame->hours;
+						float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes;
+						float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
+						attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
+						//----(Caso a hora seja MENOR que 6 AM)----//
+						timerGame->hours = (0.2083 * 6);
+					}
+					else {
+						float subAuxHours = (0.2083 * 23) - timerGame->hours;
+						float subAuxMinutes = (0.0034716 * 59) - timerGame->minutes;
+						float subAuxSeconds = (0.0005786 * 59) - timerGame->seconds;
+						//                    |H |MIN |SEC  |Day
+						attTimerGame(timerGame, lround(subAuxHours * 4.8), lround(subAuxMinutes * 4.8), lround(subAuxSeconds * 4.8), 1);
+						//----(Caso a hora seja MAIOR que 6 AM)----//
+						timerGame->hours = (0.2083 * 6);
 
-				}
+					}
 
-				InvestmentReturn(wallet);
-				RemoveBalance(wallet, container);
+					InvestmentReturn(wallet);
+					RemoveBalance(wallet, container);
+				}
 
 				break;
 			}
@@ -714,7 +707,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany +=5;
+					wallet->valueCompany *= 2;
 					wallet->products++;
 				}
 
@@ -722,7 +715,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 325 && mouse->y <= 345 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany +=5;
+					wallet->valueCompany *=2;
 					wallet->employers++;
 				}
 
@@ -730,7 +723,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany += 5;
+					wallet->valueCompany *= 2;
 					wallet->branches++;
 				}
 
@@ -792,6 +785,8 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			LogHours(timerGame->hours, timerGame->minutes, 500, 140, fontTimer, al_map_rgb(255, 0, 0));
 
+
+			DrawMouse(mouse);
 			al_flip_display();
 
 			DrawBackground(background, timerGame, container);
@@ -854,6 +849,26 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			DrawMouse(mouse);
 
+
+			if (mouse->x > 315 && mouse->x < 519)
+			{
+				al_draw_textf(fontText, al_map_rgb(0, 0, 0), 750, 154, NULL, "Investimento de Renda Fixa");
+				al_draw_multiline_text(fontText, al_map_rgb(0, 0, 0), 737, 200, 820, 15, 0,"Os investimentos de Renda Fix\nmais procuradosao os\ntitulos do Tesouro Direto, CDBs,\ndebentures, Fundos de Renda Fixa\nLCI, LCAs, CRIS CRAs e as\ncarteiras digitais renuneradas\nA rentabilidade da Renda Fixa\ndepende do valor da Selic \nque, por sua vez,\ndeterminara o valor da taxa do CDI,\na principal medida de retorno\ndesse tipo de investinento.");
+			}
+
+			if (mouse->x < 300)
+			{
+				al_draw_textf(fontText, al_map_rgb(0, 0, 0), 750, 154, NULL, "Investimentir na empresa");
+				al_draw_multiline_text(fontText, al_map_rgb(0, 0, 0), 737, 200, 820, 15, 0, "Ao investir na empresa,\nvoce tera melhoras no se ganho\nmas tambem aumentara\n os gastos com \nseus investimentos,\nentao e importante administrar a\nquantidade de investimento\npara que consiga\nconciliar seu ganho\ncom os gastos.\nAo aumentar o investimento \ne possivel ganhar melhorias\npara seu escritorio");
+			}
+
+			if (mouse->x > 516)
+			{
+				al_draw_textf(fontText, al_map_rgb(0, 0, 0), 750, 154, NULL, "Investimento de Renda Variavel");
+				al_draw_multiline_text(fontText, al_map_rgb(0, 0, 0), 737, 200, 820, 15, 0, "Classe de investimentos\ncomposta por ativos e \nprodutos financeiros\nsobre os quais nao e possivel\n saber antecipadamente\ncomo(ou se) ocorrera a\nrentabilidade.\nPortanto, nao ha garantias ou \nprevisao a respeito do retorno\nque pode ser obtido.");
+			}
+
+
 			al_flip_display();
 
 			DrawBackground(background, timerGame, container);
@@ -863,6 +878,22 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			frame--;
 		else
 			frame++;
+
+
+		int reponse = 0;
+
+		if (wallet->amount < 0)
+			reponse = al_show_native_message_box(NULL, "Ops!", "voce perdeu:", "Pressione F\nA sua empresa abriu falencia \nDeseja reiniciar o Jogo", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
+
+		if (reponse == 2)
+			container->hasFinished = true;
+
+		if (reponse == 1)
+		{
+			EndContainer(container, player);
+			InitContainer(&container, &background, &player, &mouse, &timeGame, &wallet, &hitboxs);
+
+		}
 	}
 
 	EndContainer(container, player);
