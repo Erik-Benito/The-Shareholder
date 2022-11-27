@@ -84,6 +84,16 @@ typedef struct {
 } PcBackground;
 
 typedef struct {
+	int x;
+	int y;
+
+	int width;
+	int height;
+
+	ALLEGRO_BITMAP* image;
+} Office2Background;
+
+typedef struct {
 
 	float x;
 	float y;
@@ -93,6 +103,7 @@ typedef struct {
 
 	Cloud cloud[5];
 	PcBackground pcBackground;
+	Office2Background office2background;
 
 	ALLEGRO_BITMAP* image;
 

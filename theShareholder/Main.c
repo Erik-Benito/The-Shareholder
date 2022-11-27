@@ -43,7 +43,7 @@ void InitWallet(Wallet* wallet);
 void statusProgress(Wallet* wallet, int x1, int y1, int x2, int y2);
 
 void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc);
-void DrawBackground(Background* background, TimerGame* timerGame, Container* container);
+void DrawBackground(Background* background, TimerGame* timerGame, Container* container, Wallet* wallet);
 
 void InitMovingCloudBackground(Cloud cloud[]);
 void attCloudPosition(Cloud cloud[]);
@@ -310,7 +310,7 @@ void InitContainer(Container* container, Background* background, Player* player,
 
 
 	// Carrega Background
-	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("src/imgs/oficce.bmp"), al_load_bitmap("src/imgs/pcMode.png"));
+	InitBackground(background, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, al_load_bitmap("src/imgs/oficce.bmp"), al_load_bitmap("src/imgs/pcMode.png"), al_load_bitmap("src/imgs/Office2.png"));
 
 	// Criando Personagem
 	InitPlayer(player);
@@ -335,10 +335,11 @@ void EndContainer(Container* container, Player* player) {
 }
 
 
-void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc)
+void InitBackground(Background* background, float x, float y, int width, int height, ALLEGRO_BITMAP* image, ALLEGRO_BITMAP* imagePc, ALLEGRO_BITMAP* office2)
 {
 	background->image = NULL;
 	background->pcBackground.image = NULL;
+	background->office2background.image = NULL;
 
 	background->x = x;
 	background->y = y;
@@ -352,6 +353,12 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 	background->pcBackground.height = height;
 	background->pcBackground.image = imagePc;
 
+	background->office2background.x = x;
+	background->office2background.y = y;
+	background->office2background.width = width;
+	background->office2background.height = height;
+	background->office2background.image = office2;
+
 	for (int i = 0; i < 5; i++)
 	{
 		background->cloud[i].speed = 15;
@@ -364,12 +371,17 @@ void InitBackground(Background* background, float x, float y, int width, int hei
 	if (!background->image)
 		LogError("Falha ao carregar a imagem do escritorio");
 }
-void DrawBackground(Background* background, TimerGame* timerGame, Container* container)
+void DrawBackground(Background* background, TimerGame* timerGame, Container* container, Wallet* wallet)
 {
 
 	if (!container->isPcMode)
 	{
-		al_draw_bitmap(background->image, background->x, background->y + 120, 0);
+		if (wallet->branches >= 10) {
+			al_draw_bitmap(background->office2background.image, background->x, background->y + 120, 0);
+		}
+		else {
+			al_draw_bitmap(background->image, background->x, background->y + 120, 0);
+		}
 
 		if (lround(timerGame->hours * 4.8) < 19 && lround(timerGame->hours * 4.8) > 6) {
 			al_draw_filled_rectangle(0, 120, WINDOW_WIDTH, 0, al_map_rgb(65, 166, 246));
@@ -385,7 +397,7 @@ void DrawBackground(Background* background, TimerGame* timerGame, Container* con
 		else
 			al_draw_filled_rectangle(0, 120, WINDOW_WIDTH, 0, al_map_rgb(0, 0, 0));
 	}
-	else
+	else 
 		al_draw_bitmap(background->pcBackground.image, background->x, background->y, 0);
 }
 
@@ -789,12 +801,12 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			DrawMouse(mouse);
 			al_flip_display();
 
-			DrawBackground(background, timerGame, container);
-
+			DrawBackground(background, timerGame, container, wallet);
+			
 			DrawCloudBackground(background->cloud);
 			InitMovingCloudBackground(background->cloud);
 			attCloudPosition(background->cloud);
-
+			
 		}
 		else if (container->needRedraw && container->isPcMode)
 		{
@@ -871,7 +883,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			al_flip_display();
 
-			DrawBackground(background, timerGame, container);
+			DrawBackground(background, timerGame, container, wallet);
 		}
 
 		if (frame >= FPS)
