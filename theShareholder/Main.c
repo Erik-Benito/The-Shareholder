@@ -124,7 +124,7 @@ void LogProfitOrLoss(Wallet* wallet, ALLEGRO_FONT* font)
 // (log(10,20))^(x)
 
 void InitWallet(Wallet* wallet) {
-	wallet->amount = 100000;
+	wallet->amount = 100;
 	wallet->investedProfit = 0;
 	wallet->lossPerDay = 5;
 	wallet->profitPerDay = 0;
@@ -769,7 +769,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 
 				// botão de investir inseguro
-				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->InsecureInvestedAmount)
+				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->valueToWin)
 				{
 
 					int chance = wallet->chanceToWin - 50;
@@ -785,7 +785,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 					else
 					{
 						wallet->hasWin = false;
-						wallet->amount -= wallet->valueToWin * 2;
+						wallet->amount -= wallet->valueToWin;
 						LogProfitOrLoss(wallet, fontInvest);
 					}
 					anotherTime = timerGame->minutes;
@@ -795,7 +795,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			}
 			if (event.mouse.button & 2) { // botão direito
-				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->amount >= wallet->valueToWin / 2 && wallet->valueToWin > 100)
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->valueToWin > 100)
 				{
 					wallet->valueToWin /= 2;
 				}
@@ -804,7 +804,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 					if(wallet->InsecureInvestedAmount > 2)
 					{
 						wallet->InsecureInvestedAmount /= 2;
-						wallet->valueToWin /= 4;
+						wallet->valueToWin /= 2;
 						wallet->chanceToWin += 15;
 					}
 				}
