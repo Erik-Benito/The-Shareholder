@@ -128,7 +128,7 @@ void LogProfitOrLoss(Wallet* wallet, ALLEGRO_FONT* font)
 // (log(10,20))^(x)
 
 void InitWallet(Wallet* wallet) {
-	wallet->amount = 999999;
+	wallet->amount = 100;
 	wallet->investedProfit = 0;
 	wallet->lossPerDay = 5;
 	wallet->profitPerDay = 0;
@@ -703,15 +703,12 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				keys[LEFT] = false;
 				break;
 			case ALLEGRO_KEY_ENTER:
-				//if (player->x > 900 && player->x < 1000 && player->y > 440) {
 					container->needRedraw = true;
 					container->isPcMode = !container->isPcMode;
 					fadeInNight(background, 1, container, timerGame, player);
-				//}
-
 				break;
 			case ALLEGRO_KEY_E:
-				if (player->x > 420 && player->x < 520 && player->y < 180)
+				if (player->x > 420 && player->x < 520 && player->y < 180 && !container->isPcMode)
 				{
 					if (timerGame->hours < 0.2083 * 6) {
 						//                    |H |MIN |SEC  |e
@@ -769,7 +766,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany *= 1.6;
+					wallet->valueCompany *= 2;
 					wallet->products++;
 					wallet->lossPerDay += wallet->valueCompany;
 				}
@@ -778,7 +775,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 325 && mouse->y <= 345 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany *= 1.6;
+					wallet->valueCompany *= 2;
 					wallet->employers++;
 					wallet->lossPerDay += wallet->valueCompany;
 				}
@@ -787,7 +784,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
-					wallet->valueCompany *= 1.6;
+					wallet->valueCompany *= 2;
 					wallet->branches++;
 					wallet->lossPerDay += wallet->valueCompany;
 				}
@@ -902,7 +899,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			
 			// Valor do upgrade empresa:
-			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany * 1.5);
+			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 195, 300, ALLEGRO_ALIGN_CENTRE, "Valor de upgrade RS:%i", wallet->valueCompany * 2);
 
 			// Products
 			LogQtyInvestCompany(197, 454, wallet->products, fontInvest);
@@ -994,6 +991,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 		if (reponse == 1)
 		{
 
+			Scenary scenaryNew;
 			Player playerNew;
 			Container containerNew;
 			Background backgroundNew;
@@ -1003,7 +1001,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			Wallet walletNew;
 
 			EndContainer(container, player);
-			InitContainer(&containerNew, &backgroundNew, &playerNew, &mouseNew, &timerGameNew, &walletNew, &hitboxsNew, &scenary);
+			InitContainer(&containerNew, &backgroundNew, &playerNew, &mouseNew, &timerGameNew, &walletNew, &hitboxsNew, &scenaryNew);
 
 		}
 	}
