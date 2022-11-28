@@ -148,8 +148,8 @@ void AddAmount(Wallet* wallet) {
 void InvestmentReturn(Wallet* wallet)
 {
 
-	wallet->safeInvestedAmount += (wallet->safeInvestedAmount) * 1 / 100;
-	wallet->amount += wallet->safeInvestedAmount + log10(wallet->valueCompany) * 0.8;
+	wallet->safeInvestedAmount += (wallet->safeInvestedAmount) * 5 / 100;
+	wallet->amount += (wallet->safeInvestedAmount) * 5 / 100 + log10(wallet->valueCompany) * 0.8;
 
 	wallet->profitPerDay = 0.8 * (wallet->valueCompany) * log10(wallet->valueCompany);
 }
@@ -161,7 +161,7 @@ void RemoveBalance(Wallet* wallet, Container* container)
 
 void InitTimerGame(TimerGame* timerGame)
 {
-	timerGame->hours = 4.5826;
+	timerGame->hours = 0.2083 * 7;
 	timerGame->minutes = 0;
 	timerGame->seconds = 0;
 
@@ -565,15 +565,19 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 	ALLEGRO_FONT* font = al_load_font("src/font/BAVEUSE.TTF", 20, NULL);
 	ALLEGRO_FONT* fontInvest = al_load_font("src/font/InvestFont.ttf", 12, NULL);
 	ALLEGRO_FONT* fontText = al_load_font("src/font/KOMTXTK_.ttf", 16, NULL);
+	ALLEGRO_FONT* fontIntro = al_load_font("src/font/KOMTXTK_.ttf", 28, NULL);
 	ALLEGRO_FONT* fontTimer = al_load_font("src/font/MINECRAFT.TTF", 20, NULL);
+	ALLEGRO_FONT* fontIntroText = al_load_font("src/font/KOMTXTK_.ttf", 20, NULL);
 	ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
 
 	int dir = DOWN, frame = 0, investSafeForValue = 5, investDangerForValue = 0;
 	float actualTime = 0, anotherTime = 0.0034716;
+	bool welcome = true;
 
 	al_register_event_source(container->eventQueue, al_get_timer_event_source(timer));
 
 	al_start_timer(timer);
+
 
 
 	while (!container->hasFinished)
@@ -634,7 +638,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 
 			timerGame->seconds += 0.0005786;
 
-			if (timerGame->seconds >= 0.034716)
+			if (timerGame->seconds >= 0.0034716)
 			{
 				timerGame->seconds = 0;
 				timerGame->minutes += 0.0034716;
@@ -656,9 +660,31 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			}
 
 
-			container->needRedraw = true;
+			if (welcome)
+			{
+				// Titulo
+				al_draw_textf(fontIntro, al_map_rgb(255, 255, 255), 500, 100, ALLEGRO_ALIGN_CENTRE, "THE SHAREHOLDER");
+
+
+				// Resumo - Titulo
+				al_draw_textf(fontIntro, al_map_rgb(255, 255, 255), 175, 150, ALLEGRO_ALIGN_CENTRE, "INTRODUCAO");
+				// Resumo do Game
+				al_draw_multiline_text(fontIntroText, al_map_rgb(255, 255, 255), 75, 200, 820, 25, 0, "Neste jogo voce ira aprender sobre tipos de investimentos e vai estar em situacoes onde vai precisar tomar decisoes que vao alterar o futuro da sua empresa, podendo ser prejudiciais ou benefico para o seu negocio. Como investidor, tome as decisoes certas para que alcance o topo do mercado");
+
+
+				// Resumo - Titulo
+				al_draw_textf(fontIntro, al_map_rgb(255, 255, 255), 155, 360, ALLEGRO_ALIGN_CENTRE, "HISTORIA");
+				// Resumo do Game
+				al_draw_multiline_text(fontIntroText, al_map_rgb(255, 255, 255), 75, 400, 820, 25, 0, "Voce assumira um papel de uma empresa que esta em beira da falencia e como um investidor renomado, vai alavancar os ganhos dessa empresa.Seu objetivo e fazer a empresa juntar RS:1.000.000,00");
+
+
+				al_flip_display();
+				container->needRedraw = false;
+			}
+			else
+				container->needRedraw = true;
 		}
-		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN && !welcome)
 		{
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				container->hasFinished = true;
@@ -683,7 +709,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				break;
 			}
 		}
-		else if (event.type == ALLEGRO_EVENT_KEY_UP)
+		else if (event.type == ALLEGRO_EVENT_KEY_UP && !welcome)
 		{
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				container->hasFinished = true;
@@ -737,7 +763,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				break;
 			}
 		}
-		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES)
+		else if (event.type == ALLEGRO_EVENT_MOUSE_AXES && !welcome)
 		{
 			mouse->x = event.mouse.x;
 			mouse->y = event.mouse.y;
@@ -750,11 +776,11 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				//botão esquerdo
 
 				// botão de add valor investimento seguro
-				if (mouse->x >= 335 && mouse->x <= 490 && mouse->y >= 325 && mouse->y <= 370 && wallet->amount > investSafeForValue * 2)
+				if (mouse->x >= 335 && mouse->x <= 490 && mouse->y >= 325 && mouse->y <= 370 && wallet->amount > investSafeForValue * 2 && container->isPcMode)
 					investSafeForValue *= 2;
 
 				// botão de investir seguro
-				if (mouse->x >= 360 && mouse->x <= 460 && mouse->y >= 470 && mouse->y <= 500 && wallet->amount > investSafeForValue)
+				if (mouse->x >= 360 && mouse->x <= 460 && mouse->y >= 470 && mouse->y <= 500 && wallet->amount > investSafeForValue && container->isPcMode)
 				{
 					wallet->amount -= investSafeForValue;
 					wallet->safeInvestedAmount += investSafeForValue;
@@ -763,7 +789,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				}
 
 				// Add investimento na empresa: Product
-				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany)
+				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 440 && mouse->y <= 460 && wallet->amount > wallet->valueCompany && container->isPcMode)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
 					wallet->valueCompany *= 2;
@@ -772,7 +798,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				}
 
 				// Add investimento na empresa: employers
-				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 325 && mouse->y <= 345 && wallet->amount > wallet->valueCompany)
+				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 325 && mouse->y <= 345 && wallet->amount > wallet->valueCompany && container->isPcMode)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
 					wallet->valueCompany *= 2;
@@ -781,7 +807,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				}
 
 				// Add investimento na empresa: branches
-				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany)
+				if (mouse->x >= 224 && mouse->x <= 296 && mouse->y >= 385 && mouse->y <= 405 && wallet->amount > wallet->valueCompany && container->isPcMode)
 				{
 					wallet->amount -= wallet->valueCompany * 2;
 					wallet->valueCompany *= 2;
@@ -790,7 +816,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				}
 
 				// botão de add valor investimento inseguro
-				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 320 && mouse->y <= 340 && wallet->amount > wallet->InsecureInvestedAmount * 2 && wallet->InsecureInvestedAmount < 16)
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 320 && mouse->y <= 340 && wallet->amount > wallet->InsecureInvestedAmount * 2 && wallet->InsecureInvestedAmount < 16 && container->isPcMode)
 				{
 					wallet->valueToWin *= 2;
 					wallet->InsecureInvestedAmount *= 2;
@@ -798,14 +824,14 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 				}
 				
 				
-				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->amount >= wallet->valueToWin * 2)
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->amount >= wallet->valueToWin * 2 && container->isPcMode)
 				{
 					wallet->valueToWin *= 2;
 				}
 
 
 				// botão de investir inseguro
-				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->InsecureInvestedAmount)
+				if (mouse->x >= 572 && mouse->x <= 650 && mouse->y >= 474 && mouse->y <= 500 && wallet->amount > wallet->InsecureInvestedAmount && container->isPcMode)
 				{
 
 					int chance = wallet->chanceToWin - 50;
@@ -828,14 +854,18 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 					actualTime  = timerGame->minutes;
 				}
 
-
+				if(welcome)
+				{
+					welcome = false;
+					container->needRedraw = true;
+				}
 			}
 			if (event.mouse.button & 2) { // botão direito
-				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->amount >= wallet->valueToWin / 2 && wallet->valueToWin > 100)
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 420 && mouse->y <= 430 && wallet->amount >= wallet->valueToWin / 2 && wallet->valueToWin > 100 && container->isPcMode)
 				{
 					wallet->valueToWin /= 2;
 				}
-				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 320 && mouse->y <= 340)
+				if (mouse->x >= 535 && mouse->x <= 692 && mouse->y >= 320 && mouse->y <= 340 && container->isPcMode)
 				{
 					if(wallet->InsecureInvestedAmount > 2)
 					{
