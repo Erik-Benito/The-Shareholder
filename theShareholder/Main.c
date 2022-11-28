@@ -927,7 +927,7 @@ void ControlEvent(Container* container, Background* background, Player* player, 
 			statusProgress(wallet, 340, 246, 485, 266);
 
 			// TexT 1000000
-			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 405, 252, ALLEGRO_ALIGN_CENTRE, "RS:100.000.00");
+			al_draw_textf(fontInvest, al_map_rgb(255, 255, 255), 405, 252, ALLEGRO_ALIGN_CENTRE, "RS:1.000.000");
 
 			// Valor do upgrade empresa:
 			al_draw_textf(fontInvest, al_map_rgb(0, 0, 0), 655, 227, ALLEGRO_ALIGN_CENTRE, "RS:%i", wallet->profitPerDay);
